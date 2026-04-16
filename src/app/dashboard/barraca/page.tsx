@@ -15,6 +15,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Store, Camera, Save, Instagram, MessageSquare } from "lucide-react";
 import Image from "next/image";
 
+// Função para normalizar strings para busca (remover acentos e lowercase)
+const normalizarParaBusca = (str: string) => {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+};
+
 export default function BoothSettingsPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -108,7 +117,6 @@ export default function BoothSettingsPage() {
       let logoUrl = formData.logoUrl;
       let coverImageUrl = formData.coverImageUrl;
 
-      // Upload Real para Storage para evitar estouro de limite de doc Firestore
       if (files.logo) {
         const logoRef = ref(storage, `booths/${userId}/logo_${Date.now()}`);
         await uploadBytes(logoRef, files.logo);
@@ -121,10 +129,10 @@ export default function BoothSettingsPage() {
         coverImageUrl = await getDownloadURL(coverRef);
       }
 
-      // setDoc com merge e sellerId garantido para as regras de segurança
       await setDoc(doc(db, "booths", userId), {
         ...formData,
         sellerId: userId,
+        nameNormalizado: normalizarParaBusca(formData.name),
         logoUrl,
         coverImageUrl,
         updatedAt: serverTimestamp(),
