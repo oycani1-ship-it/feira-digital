@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -21,11 +22,14 @@ import { generateProductTags } from "@/ai/flows/generate-product-tags";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { auth, db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function NewProductPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     shortDescription: "",
@@ -88,10 +92,31 @@ export default function NewProductPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "Sucesso!", description: "Produto cadastrado com sucesso." });
-    router.push("/dashboard/produtos");
+    const user = auth.currentUser;
+    if (!user) {
+      return toast({ variant: "destructive", title: "Erro", description: "Você precisa estar logado para salvar produtos." });
+    }
+
+    setIsSaving(true);
+    try {
+      await addDoc(collection(db, "products"), {
+        ...formData,
+        price: parseFloat(formData.price),
+        sellerId: user.uid,
+        createdAt: serverTimestamp(),
+        imageUrl: `https://picsum.photos/seed/${Math.random()}/400/400` // Placeholder por enquanto
+      });
+
+      toast({ title: "Sucesso!", description: "Produto cadastrado com sucesso." });
+      router.push("/dashboard/produtos");
+    } catch (error: any) {
+      console.error("Erro ao salvar produto:", error);
+      toast({ variant: "destructive", title: "Erro ao salvar", description: "Tente novamente mais tarde." });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -115,6 +140,7 @@ export default function NewProductPage() {
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required 
+              disabled={isSaving}
             />
           </div>
 
@@ -124,6 +150,7 @@ export default function NewProductPage() {
               <Select 
                 value={formData.category} 
                 onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
+                disabled={isSaving}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
@@ -145,6 +172,7 @@ export default function NewProductPage() {
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 required 
+                disabled={isSaving}
               />
             </div>
           </div>
@@ -158,7 +186,7 @@ export default function NewProductPage() {
                 size="sm" 
                 className="h-8 text-primary"
                 onClick={handleAiTags}
-                disabled={isGenerating}
+                disabled={isGenerating || isSaving}
               >
                 <Sparkles className="h-3 w-3 mr-2" /> Sugerir Tags & Categoria
               </Button>
@@ -169,6 +197,7 @@ export default function NewProductPage() {
               maxLength={160}
               value={formData.shortDescription}
               onChange={(e) => setFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
+              disabled={isSaving}
             />
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
@@ -188,7 +217,7 @@ export default function NewProductPage() {
                 size="sm" 
                 className="h-8 text-primary"
                 onClick={handleAiDescription}
-                disabled={isGenerating}
+                disabled={isGenerating || isSaving}
               >
                 {isGenerating ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <Wand2 className="h-3 w-3 mr-2" />}
                 Escrever com IA
@@ -201,6 +230,7 @@ export default function NewProductPage() {
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               required
+              disabled={isSaving}
             />
           </div>
 
@@ -212,15 +242,16 @@ export default function NewProductPage() {
             <Switch 
               checked={formData.isActive}
               onCheckedChange={(val) => setFormData(prev => ({ ...prev, isActive: val }))}
+              disabled={isSaving}
             />
           </div>
         </div>
 
         <div className="flex gap-4 pt-4">
-          <Button type="submit" size="lg" className="flex-1 bg-primary hover:bg-primary/90">
-            Salvar Produto
+          <Button type="submit" size="lg" className="flex-1 bg-primary hover:bg-primary/90" disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Salvar Produto"}
           </Button>
-          <Button type="button" variant="outline" size="lg" onClick={() => router.back()}>
+          <Button type="button" variant="outline" size="lg" onClick={() => router.back()} disabled={isSaving}>
             Cancelar
           </Button>
         </div>

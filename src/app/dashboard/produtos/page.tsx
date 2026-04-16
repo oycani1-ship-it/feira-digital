@@ -1,7 +1,8 @@
+
 "use client";
 
-import { useState } from "react";
-import { Plus, Package, Edit2, Trash2, Search, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Package, Edit2, Trash2, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -15,17 +16,67 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs, deleteDoc, doc, orderBy } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
-const MOCK_PRODUCTS = [
-  { id: "1", name: "Vaso de Barro Terracota", price: 85.00, category: "Cerâmicas", isActive: true, imageUrl: "https://picsum.photos/seed/p1/50/50" },
-  { id: "2", name: "Cesto de Palha M", price: 45.90, category: "Decoração", isActive: true, imageUrl: "https://picsum.photos/seed/p2/50/50" },
-  { id: "3", name: "Bolsa Bordada Flor", price: 120.00, category: "Acessórios", isActive: false, imageUrl: "https://picsum.photos/seed/p3/50/50" },
-];
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  isActive: boolean;
+  imageUrl: string;
+}
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const { toast } = useToast();
 
-  const filteredProducts = MOCK_PRODUCTS.filter(p => 
+  const fetchProducts = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const q = query(
+        collection(db, "products"),
+        where("sellerId", "==", user.uid),
+        orderBy("createdAt", "desc")
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const items: Product[] = [];
+      querySnapshot.forEach((doc) => {
+        items.push({ id: doc.id, ...doc.data() } as Product);
+      });
+      setProducts(items);
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar seus produtos." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+
+    try {
+      await deleteDoc(doc(db, "products", id));
+      setProducts(prev => prev.filter(p => p.id !== id));
+      toast({ title: "Produto excluído", description: "O item foi removido do seu catálogo." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível excluir o produto." });
+    }
+  };
+
+  const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -56,60 +107,75 @@ export default function ProductsPage() {
       </div>
 
       <div className="border rounded-2xl overflow-hidden shadow-sm bg-white">
-        <Table>
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="w-[80px]">Foto</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Preço</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="relative h-12 w-12 rounded-lg overflow-hidden border">
-                      <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}</TableCell>
-                  <TableCell>
-                    <Badge variant={product.isActive ? "default" : "secondary"} className={product.isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}>
-                      {product.isActive ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/dashboard/produtos/${product.id}/editar`}>
-                          <Edit2 className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <Trash2 className="h-4 w-4" />
+        {isLoading ? (
+          <div className="h-64 flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Carregando catálogo...</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="w-[80px]">Foto</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Preço</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <div className="relative h-12 w-12 rounded-lg overflow-hidden border">
+                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}</TableCell>
+                    <TableCell>
+                      <Badge variant={product.isActive ? "default" : "secondary"} className={product.isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}>
+                        {product.isActive ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/dashboard/produtos/${product.id}/editar`}>
+                            <Edit2 className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(product.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-48 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <Package className="h-10 w-10 mb-2 opacity-20" />
+                      <p>Nenhum produto encontrado.</p>
+                      <Button variant="link" asChild className="mt-2">
+                         <Link href="/dashboard/produtos/novo">Cadastrar meu primeiro produto</Link>
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-48 text-center">
-                  <div className="flex flex-col items-center justify-center text-muted-foreground">
-                    <Package className="h-10 w-10 mb-2 opacity-20" />
-                    <p>Nenhum produto encontrado.</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
     </div>
   );
