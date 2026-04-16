@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Package, Edit2, Trash2, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { auth, db } from "@/lib/firebase";
-import { collection, query, where, getDocs, deleteDoc, doc, orderBy } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 interface Product {
@@ -35,15 +36,13 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
 
-  const fetchProducts = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
+  const fetchProducts = useCallback(async (userId: string) => {
+    setIsLoading(true);
     try {
+      // Simplificamos a query removendo o orderBy para garantir que funcione sem índices compostos inicialmente
       const q = query(
         collection(db, "products"),
-        where("sellerId", "==", user.uid),
-        orderBy("createdAt", "desc")
+        where("sellerId", "==", userId)
       );
       
       const querySnapshot = await getDocs(q);
@@ -51,18 +50,35 @@ export default function ProductsPage() {
       querySnapshot.forEach((doc) => {
         items.push({ id: doc.id, ...doc.data() } as Product);
       });
-      setProducts(items);
+      
+      // Ordenamos manualmente no cliente para garantir a experiência sem erro de índice
+      setProducts(items.sort((a: any, b: any) => {
+        const dateA = a.createdAt?.seconds || 0;
+        const dateB = b.createdAt?.seconds || 0;
+        return dateB - dateA;
+      }));
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar seus produtos." });
+      toast({ 
+        variant: "destructive", 
+        title: "Erro", 
+        description: "Não foi possível carregar seus produtos. Verifique sua conexão." 
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        fetchProducts(user.uid);
+      } else {
+        setIsLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [fetchProducts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
