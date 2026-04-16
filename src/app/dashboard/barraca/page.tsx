@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Store, Camera, Save, Globe, Instagram, MessageSquare } from "lucide-react";
+import { Loader2, Store, Camera, Save, Instagram, MessageSquare } from "lucide-react";
 import Image from "next/image";
 
 export default function BoothSettingsPage() {
@@ -108,7 +108,7 @@ export default function BoothSettingsPage() {
       let logoUrl = formData.logoUrl;
       let coverImageUrl = formData.coverImageUrl;
 
-      // Upload Real para Storage
+      // Upload Real para Storage para evitar estouro de limite de doc Firestore
       if (files.logo) {
         const logoRef = ref(storage, `booths/${userId}/logo_${Date.now()}`);
         await uploadBytes(logoRef, files.logo);
@@ -121,7 +121,7 @@ export default function BoothSettingsPage() {
         coverImageUrl = await getDownloadURL(coverRef);
       }
 
-      // setDoc com merge e sellerId garantido
+      // setDoc com merge e sellerId garantido para as regras de segurança
       await setDoc(doc(db, "booths", userId), {
         ...formData,
         sellerId: userId,

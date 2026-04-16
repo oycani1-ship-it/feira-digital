@@ -69,7 +69,7 @@ export default function ProductsPage() {
         });
         setProducts(items);
       } catch (indexError) {
-        // Fallback: Query simples + ordenação local
+        // Fallback: Query simples + ordenação local se o índice não estiver pronto
         q = query(
           collection(db, "products"),
           where("sellerId", "==", userId)
@@ -98,6 +98,7 @@ export default function ProductsPage() {
   }, [toast]);
 
   useEffect(() => {
+    // Só inicia a busca quando o Firebase confirmar o usuário
     if (!authLoading && user) {
       fetchProducts(user.uid);
     }

@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Loader2, Sparkles, Wand2, ImagePlus, X, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, Loader2, Sparkles, Wand2, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,6 +124,7 @@ export default function NewProductPage() {
     try {
       const uploadedUrls: string[] = [];
 
+      // Faz upload das imagens para o Storage antes de salvar no Firestore
       for (const img of images) {
         const timestamp = Date.now();
         const filename = img.file.name.replace(/[^a-zA-Z0-9.]/g, "_");
@@ -136,8 +136,10 @@ export default function NewProductPage() {
         uploadedUrls.push(url);
       }
 
+      // Salva o documento no Firestore com a URL pública do Storage
       await addDoc(collection(db, "products"), {
         ...formData,
+        name: formData.name.trim(),
         price: parseFloat(formData.price),
         sellerId: user.uid,
         createdAt: serverTimestamp(),
@@ -202,7 +204,6 @@ export default function NewProductPage() {
               multiple 
               onChange={handleFileChange}
             />
-            <p className="text-xs text-muted-foreground">O upload será feito com segurança para o nosso servidor.</p>
           </div>
 
           <div className="space-y-2">
