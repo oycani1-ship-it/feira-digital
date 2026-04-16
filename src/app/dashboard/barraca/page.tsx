@@ -15,7 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Store, Camera, Save, Instagram, MessageSquare } from "lucide-react";
 import Image from "next/image";
 
-// Função para normalizar strings para busca (remover acentos e lowercase)
 const normalizarParaBusca = (str: string) => {
   return str
     .toLowerCase()
@@ -133,6 +132,7 @@ export default function BoothSettingsPage() {
         ...formData,
         sellerId: userId,
         nameNormalizado: normalizarParaBusca(formData.name),
+        categoriaNormalizada: normalizarParaBusca(formData.category),
         logoUrl,
         coverImageUrl,
         updatedAt: serverTimestamp(),
