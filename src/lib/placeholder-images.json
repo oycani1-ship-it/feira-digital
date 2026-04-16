@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Craft fair table with colorful pottery",
+      "imageUrl": "https://picsum.photos/seed/feira-hero/1200/600",
+      "imageHint": "artisan craft fair pottery"
+    },
+    {
+      "id": "booth-cover-1",
+      "description": "Artisan booth with textiles",
+      "imageUrl": "https://picsum.photos/seed/booth1/800/400",
+      "imageHint": "artisan textiles booth"
+    },
+    {
+      "id": "cat-alimentation",
+      "description": "Home made jelly and jams",
+      "imageUrl": "https://picsum.photos/seed/cat-food/400/400",
+      "imageHint": "home made food"
+    },
+    {
+      "id": "cat-decor",
+      "description": "Modern home decoration items",
+      "imageUrl": "https://picsum.photos/seed/cat-decor/400/400",
+      "imageHint": "modern home decor"
+    },
+    {
+      "id": "cat-fashion",
+      "description": "Handmade clothing items",
+      "imageUrl": "https://picsum.photos/seed/cat-fashion/400/400",
+      "imageHint": "handmade clothing"
+    }
+  ]
 }
