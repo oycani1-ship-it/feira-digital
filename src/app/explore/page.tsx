@@ -5,7 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Star, Filter, X, Store } from "lucide-react";
+import { Search, MapPin, Star, Filter, X, Store as StoreIcon } from "lucide-react";
 import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
@@ -19,60 +19,57 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
-// Mock data for initial build
-const MOCK_BOOTHS = [
-  {
-    id: "1",
-    name: "Cerâmicas da Terra",
-    shortDescription: "Peças exclusivas moldadas à mão com argila local.",
-    category: "Cerâmicas",
-    city: "Cunha",
-    state: "SP",
-    averageRating: 4.8,
-    totalRatings: 12,
-    coverImageUrl: "https://picsum.photos/seed/ceramica/400/250",
-    logoUrl: "https://picsum.photos/seed/logo1/100/100",
-  },
-  {
-    id: "2",
-    name: "Cestaria do Norte",
-    shortDescription: "Artesanato tradicional em palha de carnaúba.",
-    category: "Decoração",
-    city: "Teresina",
-    state: "PI",
-    averageRating: 4.9,
-    totalRatings: 28,
-    coverImageUrl: "https://picsum.photos/seed/cesta/400/250",
-    logoUrl: "https://picsum.photos/seed/logo2/100/100",
-  },
-  {
-    id: "3",
-    name: "Linhas de Algodão",
-    shortDescription: "Roupas e acessórios feitos em tear manual.",
-    category: "Moda Artesanal",
-    city: "Belo Horizonte",
-    state: "MG",
-    averageRating: 4.7,
-    totalRatings: 15,
-    coverImageUrl: "https://picsum.photos/seed/fashion/400/250",
-    logoUrl: "https://picsum.photos/seed/logo3/100/100",
-  }
-];
+interface Booth {
+  id: string;
+  name: string;
+  shortDescription?: string;
+  description?: string;
+  category: string;
+  city: string;
+  state: string;
+  averageRating?: number;
+  totalRatings?: number;
+  coverImageUrl?: string;
+  logoUrl?: string;
+}
 
 export default function ExplorePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedState, setSelectedState] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [booths, setBooths] = useState<Booth[]>([]);
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    const fetchBooths = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "booths"));
+        const fetchedBooths: Booth[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          // Só adicionamos se tiver o básico: nome
+          if (data.name) {
+            fetchedBooths.push({
+              id: doc.id,
+              ...data
+            } as Booth);
+          }
+        });
+        setBooths(fetchedBooths);
+      } catch (error) {
+        console.error("Erro ao buscar barracas:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBooths();
   }, []);
 
-  const filteredBooths = MOCK_BOOTHS.filter(booth => {
+  const filteredBooths = booths.filter(booth => {
     const matchesSearch = booth.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || booth.category === selectedCategory;
     const matchesState = selectedState === "all" || booth.state === selectedState;
@@ -177,28 +174,40 @@ export default function ExplorePage() {
                 {filteredBooths.map(booth => (
                   <Link key={booth.id} href={`/barraca/${booth.id}`}>
                     <Card className="group overflow-hidden border-none shadow-md transition-smooth hover:shadow-xl hover:-translate-y-1">
-                      <div className="relative h-48">
-                        <Image 
-                          src={booth.coverImageUrl} 
-                          alt={booth.name} 
-                          fill 
-                          className="object-cover transition-smooth group-hover:scale-105"
-                        />
+                      <div className="relative h-48 bg-muted">
+                        {booth.coverImageUrl ? (
+                           <Image 
+                            src={booth.coverImageUrl} 
+                            alt={booth.name} 
+                            fill 
+                            className="object-cover transition-smooth group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <StoreIcon className="h-12 w-12 text-muted-foreground/20" />
+                          </div>
+                        )}
                         <div className="absolute top-2 right-2">
                           <Badge className="bg-white/90 text-primary border-none">{booth.category}</Badge>
                         </div>
                       </div>
                       <CardContent className="p-4 pt-8 relative">
                         <div className="absolute -top-10 left-4 w-16 h-16 rounded-full border-4 border-white overflow-hidden shadow-lg bg-white">
-                          <Image src={booth.logoUrl} alt={booth.name} fill className="object-cover" />
+                          {booth.logoUrl ? (
+                            <Image src={booth.logoUrl} alt={booth.name} fill className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                              <StoreIcon className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
                         </div>
                         <h3 className="font-headline text-xl font-bold mb-2 group-hover:text-primary transition-colors">{booth.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                          {booth.shortDescription}
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[40px]">
+                          {booth.shortDescription || booth.description || "Sem descrição disponível."}
                         </p>
                         <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
                           <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {booth.city}, {booth.state}</span>
-                          <span className="flex items-center gap-1"><Star className="h-3 w-3 text-amber-500 fill-amber-500" /> {booth.averageRating} ({booth.totalRatings})</span>
+                          <span className="flex items-center gap-1"><Star className="h-3 w-3 text-amber-500 fill-amber-500" /> {booth.averageRating || "N/A"}</span>
                         </div>
                       </CardContent>
                       <CardFooter className="p-4 pt-0">
@@ -210,7 +219,7 @@ export default function ExplorePage() {
               </div>
             ) : (
               <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed">
-                <Store className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <StoreIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-bold mb-2">Nenhuma barraca encontrada</h3>
                 <p className="text-muted-foreground mb-6">Tente ajustar seus filtros ou busca.</p>
                 <Button onClick={() => {
