@@ -5,7 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Star, Filter, X } from "lucide-react";
+import { Search, MapPin, Star, Filter, X, Store } from "lucide-react";
 import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
