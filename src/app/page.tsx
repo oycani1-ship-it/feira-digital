@@ -1,15 +1,28 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, MapPin, Store, Sparkles, Heart } from "lucide-react";
+import { ArrowRight, Store, Sparkles, Heart, LayoutDashboard } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
   const featuredCategories = CATEGORIES.slice(0, 8);
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-bg');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -17,7 +30,7 @@ export default function Home() {
       
       <main>
         {/* Hero Section */}
-        <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+        <section className="relative h-[650px] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <Image 
               src={heroImage?.imageUrl || "https://picsum.photos/seed/feira-hero/1200/600"} 
@@ -36,13 +49,22 @@ export default function Home() {
               Descubra peças únicas feitas com amor por artesãos brasileiros. 
               Sua próxima descoberta artesanal está a um clique de distância.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-16 duration-1000">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg h-14 px-8" asChild>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-16 duration-1000">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg h-14 px-8 w-full sm:w-auto" asChild>
                 <Link href="/explore">Começar a Explorar <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
-              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur border-white/20 text-white hover:bg-white/20 text-lg h-14 px-8" asChild>
-                <Link href="/register">Abrir minha Barraca</Link>
+              
+              <Button size="lg" variant="secondary" className="text-lg h-14 px-8 w-full sm:w-auto font-bold shadow-lg" asChild>
+                <Link href={user ? "/dashboard" : "/login"}>
+                  <LayoutDashboard className="mr-2 h-5 w-5" /> Acessar Minha Barraca
+                </Link>
               </Button>
+
+              {!user && (
+                <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur border-white/20 text-white hover:bg-white/20 text-lg h-14 px-8 w-full sm:w-auto" asChild>
+                  <Link href="/register">Abrir minha Barraca</Link>
+                </Button>
+              )}
             </div>
           </div>
         </section>
