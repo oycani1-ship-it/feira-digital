@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { ChevronLeft, Loader2, Sparkles, Wand2, ImagePlus, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,12 +24,15 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import Image from "next/image";
 
 export default function NewProductPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     shortDescription: "",
@@ -39,6 +42,23 @@ export default function NewProductPage() {
     tags: [] as string[],
     isActive: true
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImages(prev => [...prev, reader.result as string].slice(0, 4)); // Limite de 4 fotos
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleAiDescription = async () => {
     if (!formData.name || !formData.category || !formData.shortDescription) {
@@ -54,10 +74,11 @@ export default function NewProductPage() {
         productName: formData.name,
         category: formData.category,
         shortDescription: formData.shortDescription,
-        tags: formData.tags
+        tags: formData.tags,
+        imageUrls: images.length > 0 ? images : undefined
       });
       setFormData(prev => ({ ...prev, description: result.description }));
-      toast({ title: "Descrição gerada!", description: "Sua descrição foi criada pela nossa IA." });
+      toast({ title: "Descrição gerada!", description: "Sua descrição foi criada pela nossa IA considerando suas fotos." });
     } catch (err) {
       toast({ variant: "destructive", title: "Erro na IA", description: "Não foi possível gerar a descrição agora." });
     } finally {
@@ -69,7 +90,7 @@ export default function NewProductPage() {
     if (!formData.name || !formData.shortDescription) {
       return toast({ 
         title: "Campos necessários", 
-        description: "Preencha o nome e a descrição para sugerir tags." 
+        description: "Preencha o nome e o resumo para sugerir tags." 
       });
     }
 
@@ -106,7 +127,8 @@ export default function NewProductPage() {
         price: parseFloat(formData.price),
         sellerId: user.uid,
         createdAt: serverTimestamp(),
-        imageUrl: `https://picsum.photos/seed/${Math.random()}/400/400` // Placeholder por enquanto
+        imageUrl: images[0] || `https://picsum.photos/seed/${Math.random()}/400/400`,
+        gallery: images
       });
 
       toast({ title: "Sucesso!", description: "Produto cadastrado com sucesso." });
@@ -131,7 +153,45 @@ export default function NewProductPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid gap-6">
+        <div className="grid gap-8">
+          {/* Foto do Produto */}
+          <div className="space-y-4">
+            <Label className="text-lg font-bold">Fotos do Produto (Máx 4)</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {images.map((src, index) => (
+                <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-muted group">
+                  <Image src={src} alt={`Preview ${index}`} fill className="object-cover" />
+                  <button 
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              {images.length < 4 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-square rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors text-muted-foreground"
+                >
+                  <ImagePlus className="h-8 w-8" />
+                  <span className="text-xs font-medium">Adicionar Foto</span>
+                </button>
+              )}
+            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              multiple 
+              onChange={handleFileChange}
+            />
+            <p className="text-xs text-muted-foreground">Arraste fotos ou clique no botão para fazer upload. Fotos reais ajudam a IA a descrever melhor sua arte.</p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="name">Nome do Produto</Label>
             <Input 
