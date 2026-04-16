@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { collection, query, where, getDocs, deleteDoc, doc, orderBy } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 interface Product {
@@ -28,41 +28,69 @@ interface Product {
   category: string;
   isActive: boolean;
   imageUrl: string;
+  createdAt?: any;
 }
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setAuthLoading(false);
+      if (!firebaseUser) {
+        router.push("/login");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const fetchProducts = useCallback(async (userId: string) => {
     setIsLoading(true);
     try {
-      // Simplificamos a query removendo o orderBy para garantir que funcione sem índices compostos inicialmente
-      const q = query(
-        collection(db, "products"),
-        where("sellerId", "==", userId)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const items: Product[] = [];
-      querySnapshot.forEach((doc) => {
-        items.push({ id: doc.id, ...doc.data() } as Product);
-      });
-      
-      // Ordenamos manualmente no cliente para garantir a experiência sem erro de índice
-      setProducts(items.sort((a: any, b: any) => {
-        const dateA = a.createdAt?.seconds || 0;
-        const dateB = b.createdAt?.seconds || 0;
-        return dateB - dateA;
-      }));
+      // Tenta com orderBy (pode falhar se o índice não existir)
+      let q;
+      try {
+        q = query(
+          collection(db, "products"),
+          where("sellerId", "==", userId),
+          orderBy("createdAt", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        const items: Product[] = [];
+        querySnapshot.forEach((doc) => {
+          items.push({ id: doc.id, ...doc.data() } as Product);
+        });
+        setProducts(items);
+      } catch (indexError) {
+        // Fallback: Query simples + ordenação local
+        q = query(
+          collection(db, "products"),
+          where("sellerId", "==", userId)
+        );
+        const querySnapshot = await getDocs(q);
+        const items: Product[] = [];
+        querySnapshot.forEach((doc) => {
+          items.push({ id: doc.id, ...doc.data() } as Product);
+        });
+        setProducts(items.sort((a, b) => {
+          const dateA = a.createdAt?.seconds || 0;
+          const dateB = b.createdAt?.seconds || 0;
+          return dateB - dateA;
+        }));
+      }
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
       toast({ 
         variant: "destructive", 
         title: "Erro", 
-        description: "Não foi possível carregar seus produtos. Verifique sua conexão." 
+        description: "Não foi possível carregar seus produtos." 
       });
     } finally {
       setIsLoading(false);
@@ -70,15 +98,10 @@ export default function ProductsPage() {
   }, [toast]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        fetchProducts(user.uid);
-      } else {
-        setIsLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [fetchProducts]);
+    if (!authLoading && user) {
+      fetchProducts(user.uid);
+    }
+  }, [user, authLoading, fetchProducts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
@@ -95,6 +118,15 @@ export default function ProductsPage() {
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (authLoading) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Verificando acesso...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -145,8 +177,14 @@ export default function ProductsPage() {
                 filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
-                      <div className="relative h-12 w-12 rounded-lg overflow-hidden border">
-                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                      <div className="relative h-12 w-12 rounded-lg overflow-hidden border bg-muted/50">
+                        {product.imageUrl ? (
+                          <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="h-4 w-4 text-muted-foreground/30" />
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>

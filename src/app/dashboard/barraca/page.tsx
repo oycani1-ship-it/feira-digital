@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -109,6 +108,7 @@ export default function BoothSettingsPage() {
       let logoUrl = formData.logoUrl;
       let coverImageUrl = formData.coverImageUrl;
 
+      // Upload Real para Storage
       if (files.logo) {
         const logoRef = ref(storage, `booths/${userId}/logo_${Date.now()}`);
         await uploadBytes(logoRef, files.logo);
@@ -121,18 +121,19 @@ export default function BoothSettingsPage() {
         coverImageUrl = await getDownloadURL(coverRef);
       }
 
+      // setDoc com merge e sellerId garantido
       await setDoc(doc(db, "booths", userId), {
         ...formData,
+        sellerId: userId,
         logoUrl,
         coverImageUrl,
         updatedAt: serverTimestamp(),
-        sellerId: userId // Confirmado uso do campo sellerId
       }, { merge: true });
 
       toast({ title: "Perfil atualizado!", description: "As informações da sua barraca foram salvas." });
     } catch (error) {
       console.error(error);
-      toast({ variant: "destructive", title: "Erro ao salvar", description: "Tente novamente mais tarde." });
+      toast({ variant: "destructive", title: "Erro ao salvar", description: "Verifique suas permissões e tente novamente." });
     } finally {
       setIsSaving(false);
     }
