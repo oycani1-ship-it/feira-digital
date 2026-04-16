@@ -2,9 +2,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,11 @@ export default function BoothSettingsPage() {
     logoUrl: "",
     coverImageUrl: ""
   });
+
+  const [files, setFiles] = useState<{
+    logo: File | null;
+    cover: File | null;
+  }>({ logo: null, cover: null });
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -69,7 +75,6 @@ export default function BoothSettingsPage() {
           coverImageUrl: data.coverImageUrl || ""
         });
       } else {
-        // Inicializar com nome do usuário se não houver barraca
         setFormData(prev => ({ ...prev, sellerName: auth.currentUser?.displayName || "" }));
       }
     } catch (error) {
@@ -79,13 +84,18 @@ export default function BoothSettingsPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'coverImageUrl') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setFiles(prev => ({ ...prev, [type]: file }));
+    
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, [field]: reader.result as string }));
+      setFormData(prev => ({ 
+        ...prev, 
+        [type === 'logo' ? 'logoUrl' : 'coverImageUrl']: reader.result as string 
+      }));
     };
     reader.readAsDataURL(file);
   };
@@ -96,14 +106,32 @@ export default function BoothSettingsPage() {
 
     setIsSaving(true);
     try {
+      let logoUrl = formData.logoUrl;
+      let coverImageUrl = formData.coverImageUrl;
+
+      if (files.logo) {
+        const logoRef = ref(storage, `booths/${userId}/logo_${Date.now()}`);
+        await uploadBytes(logoRef, files.logo);
+        logoUrl = await getDownloadURL(logoRef);
+      }
+
+      if (files.cover) {
+        const coverRef = ref(storage, `booths/${userId}/cover_${Date.now()}`);
+        await uploadBytes(coverRef, files.cover);
+        coverImageUrl = await getDownloadURL(coverRef);
+      }
+
       await setDoc(doc(db, "booths", userId), {
         ...formData,
+        logoUrl,
+        coverImageUrl,
         updatedAt: serverTimestamp(),
-        ownerId: userId
+        sellerId: userId // Confirmado uso do campo sellerId
       }, { merge: true });
 
       toast({ title: "Perfil atualizado!", description: "As informações da sua barraca foram salvas." });
     } catch (error) {
+      console.error(error);
       toast({ variant: "destructive", title: "Erro ao salvar", description: "Tente novamente mais tarde." });
     } finally {
       setIsSaving(false);
@@ -129,7 +157,6 @@ export default function BoothSettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-8">
-        {/* Banner and Logo Section */}
         <div className="space-y-4">
           <Label className="text-lg font-bold">Identidade Visual</Label>
           <div className="relative group">
@@ -139,7 +166,7 @@ export default function BoothSettingsPage() {
               ) : (
                 <div className="text-center text-muted-foreground">
                   <Camera className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                  <span className="text-xs">Foto de Capa (Recomendado 1200x400)</span>
+                  <span className="text-xs">Foto de Capa</span>
                 </div>
               )}
               <Button 
@@ -172,8 +199,8 @@ export default function BoothSettingsPage() {
               </div>
             </div>
           </div>
-          <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'logoUrl')} />
-          <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'coverImageUrl')} />
+          <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'logo')} />
+          <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} />
           <div className="pt-6" />
         </div>
 
@@ -278,17 +305,6 @@ export default function BoothSettingsPage() {
                 placeholder="Ex: minha_loja_artesanal" 
                 value={formData.instagram}
                 onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="website" className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-blue-500" /> Website ou Portfólio
-              </Label>
-              <Input 
-                id="website" 
-                placeholder="https://meusite.com.br" 
-                value={formData.website}
-                onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
               />
             </div>
           </div>

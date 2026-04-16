@@ -22,8 +22,9 @@ import { generateProductTags } from "@/ai/flows/generate-product-tags";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
 
 export default function NewProductPage() {
@@ -32,7 +33,7 @@ export default function NewProductPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<{file: File, preview: string}[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     shortDescription: "",
@@ -50,7 +51,7 @@ export default function NewProductPage() {
     Array.from(files).forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result as string].slice(0, 4)); // Limite de 4 fotos
+        setImages(prev => [...prev, { file, preview: reader.result as string }].slice(0, 4));
       };
       reader.readAsDataURL(file);
     });
@@ -75,10 +76,10 @@ export default function NewProductPage() {
         category: formData.category,
         shortDescription: formData.shortDescription,
         tags: formData.tags,
-        imageUrls: images.length > 0 ? images : undefined
+        imageUrls: images.length > 0 ? images.map(img => img.preview) : undefined
       });
       setFormData(prev => ({ ...prev, description: result.description }));
-      toast({ title: "Descrição gerada!", description: "Sua descrição foi criada pela nossa IA considerando suas fotos." });
+      toast({ title: "Descrição gerada!", description: "Sua descrição foi criada pela nossa IA." });
     } catch (err) {
       toast({ variant: "destructive", title: "Erro na IA", description: "Não foi possível gerar a descrição agora." });
     } finally {
@@ -122,13 +123,26 @@ export default function NewProductPage() {
 
     setIsSaving(true);
     try {
+      const uploadedUrls: string[] = [];
+
+      for (const img of images) {
+        const timestamp = Date.now();
+        const filename = img.file.name.replace(/[^a-zA-Z0-9.]/g, "_");
+        const storagePath = `products/${user.uid}/${timestamp}_${filename}`;
+        const storageRef = ref(storage, storagePath);
+        
+        await uploadBytes(storageRef, img.file);
+        const url = await getDownloadURL(storageRef);
+        uploadedUrls.push(url);
+      }
+
       await addDoc(collection(db, "products"), {
         ...formData,
         price: parseFloat(formData.price),
         sellerId: user.uid,
         createdAt: serverTimestamp(),
-        imageUrl: images[0] || `https://picsum.photos/seed/${Math.random()}/400/400`,
-        gallery: images
+        imageUrl: uploadedUrls[0] || "",
+        gallery: uploadedUrls
       });
 
       toast({ title: "Sucesso!", description: "Produto cadastrado com sucesso." });
@@ -154,13 +168,12 @@ export default function NewProductPage() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid gap-8">
-          {/* Foto do Produto */}
           <div className="space-y-4">
             <Label className="text-lg font-bold">Fotos do Produto (Máx 4)</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {images.map((src, index) => (
+              {images.map((img, index) => (
                 <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-muted group">
-                  <Image src={src} alt={`Preview ${index}`} fill className="object-cover" />
+                  <Image src={img.preview} alt={`Preview ${index}`} fill className="object-cover" />
                   <button 
                     type="button"
                     onClick={() => removeImage(index)}
@@ -189,7 +202,7 @@ export default function NewProductPage() {
               multiple 
               onChange={handleFileChange}
             />
-            <p className="text-xs text-muted-foreground">Arraste fotos ou clique no botão para fazer upload. Fotos reais ajudam a IA a descrever melhor sua arte.</p>
+            <p className="text-xs text-muted-foreground">O upload será feito com segurança para o nosso servidor.</p>
           </div>
 
           <div className="space-y-2">
