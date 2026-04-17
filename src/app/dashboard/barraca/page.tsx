@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,9 +38,6 @@ export default function MinhaBarracaPage() {
 
   const [logoUrl,    setLogoUrl]    = useState("");
   const [capaUrl,    setCapaUrl]    = useState("");
-
-  const [logoFile,   setLogoFile]   = useState<File | null>(null);
-  const [capaFile,   setCapaFile]   = useState<File | null>(null);
 
   const [logoPreview, setLogoPreview] = useState("");
   const [capaPreview, setCapaPreview] = useState("");
@@ -82,51 +78,57 @@ export default function MinhaBarracaPage() {
     })();
   }, [authReady, user]);
 
-  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const toBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  async function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    setLogoFile(f);
-    setLogoPreview(URL.createObjectURL(f));
+    try {
+      const b64 = await toBase64(f);
+      setLogoUrl(b64);
+      setLogoPreview(b64);
+    } catch (err) {
+      toast({ title: "Erro na imagem", description: "Não foi possível processar o logo.", variant: "destructive" });
+    }
   }
 
-  function onCapaChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onCapaChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    setCapaFile(f);
-    setCapaPreview(URL.createObjectURL(f));
+    try {
+      const b64 = await toBase64(f);
+      setCapaUrl(b64);
+      setCapaPreview(b64);
+    } catch (err) {
+      toast({ title: "Erro na imagem", description: "Não foi possível processar a capa.", variant: "destructive" });
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
 
+    // Validação
+    if (!nome.trim()) {
+      return toast({ title: "Campo obrigatório", description: "O nome da barraca é necessário.", variant: "destructive" });
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
-      let finalLogoUrl = logoUrl;
-      if (logoFile instanceof File) {
-        const r    = ref(storage, `booths/${user.uid}/logo_${Date.now()}`);
-        const snap = await uploadBytes(r, logoFile);
-        finalLogoUrl   = await getDownloadURL(snap.ref);
-        setLogoUrl(finalLogoUrl);
-        setLogoFile(null);
-      }
-
-      let finalCapaUrl = capaUrl;
-      if (capaFile instanceof File) {
-        const r    = ref(storage, `booths/${user.uid}/capa_${Date.now()}`);
-        const snap = await uploadBytes(r, capaFile);
-        finalCapaUrl   = await getDownloadURL(snap.ref);
-        setCapaUrl(finalCapaUrl);
-        setCapaFile(null);
-      }
-
       const boothRef = doc(db, "booths", user.uid);
       const existing = await getDoc(boothRef);
 
       const payload: Record<string, unknown> = {
-        sellerId:    user.uid,
+        sellerId:    user.uid, // Segurança: UID garantido pelo Auth
         sellerEmail: user.email ?? "",
         nome:        nome.trim(),
         bio:         bio.trim(),
@@ -135,9 +137,9 @@ export default function MinhaBarracaPage() {
         estado,
         whatsapp:    whatsapp.trim(),
         instagram:   instagram.trim(),
-        logoUrl:     finalLogoUrl,
-        capaUrl:     finalCapaUrl,
-        isActive:    true, // FIX 4: Sempre garantir que está ativo ao salvar
+        logoUrl:     logoUrl, // Já está em base64 se foi alterado
+        capaUrl:     capaUrl, // Já está em base64 se foi alterado
+        isActive:    true,
         updatedAt:   serverTimestamp(),
         nomeNormalizado: nome.trim().toLowerCase()
           .normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
@@ -223,7 +225,7 @@ export default function MinhaBarracaPage() {
 
       {/* Nome */}
       <div className="space-y-1">
-        <Label htmlFor="nome">{t('dashboard.boothSettings.nameLabel')}</Label>
+        <Label htmlFor="nome">{t('dashboard.boothSettings.nameLabel')} *</Label>
         <Input id="nome" value={nome} onChange={e => setNome(e.target.value)} required placeholder="Ex: Artesanato da Maria" />
       </div>
 

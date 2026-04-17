@@ -2,7 +2,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Regras para Usuários
+    // Regras genéricas para Usuários (se necessário)
     match /users/{userId} {
       allow read: if true;
       allow create: if request.auth != null && request.auth.uid == userId;
@@ -12,17 +12,22 @@ service cloud.firestore {
     // Regras para Barracas (Booths)
     match /booths/{boothId} {
       allow read: if true;
+      // Garante que o boothId é igual ao UID do criador e sellerId confere
       allow create: if request.auth != null 
+        && boothId == request.auth.uid
         && request.resource.data.sellerId == request.auth.uid;
+      // Garante que apenas o dono (UID == boothId) pode atualizar
       allow update, delete: if request.auth != null 
-        && resource.data.sellerId == request.auth.uid;
+        && boothId == request.auth.uid;
     }
 
     // Regras para Produtos (Products)
     match /products/{productId} {
       allow read: if true;
+      // Garante que o sellerId enviado no corpo é o do usuário logado
       allow create: if request.auth != null 
         && request.resource.data.sellerId == request.auth.uid;
+      // Garante que apenas quem criou (sellerId salvo no banco) pode editar
       allow update, delete: if request.auth != null 
         && resource.data.sellerId == request.auth.uid;
     }
@@ -30,6 +35,7 @@ service cloud.firestore {
     // Regras para Avaliações (Ratings)
     match /ratings/{ratingId} {
       allow read: if true;
+      // Usuário logado pode criar avaliação (sellerId != userId para não avaliar a si mesmo)
       allow create: if request.auth != null 
         && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null 

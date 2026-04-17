@@ -21,9 +21,8 @@ import { generateProductTags } from "@/ai/flows/generate-product-tags";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { auth, db, storage } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
 import { useTranslation } from "@/context/language-context";
 
@@ -44,6 +43,15 @@ export default function NewProductPage() {
     tags: [] as string[],
     isActive: true
   });
+
+  const toBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -122,37 +130,40 @@ export default function NewProductPage() {
       return toast({ variant: "destructive", title: "Erro", description: "Você precisa estar logado para salvar produtos." });
     }
 
+    // Validação básica
+    if (!formData.name.trim() || !formData.price || !formData.category) {
+      return toast({ variant: "destructive", title: "Erro", description: "Preencha todos os campos obrigatórios." });
+    }
+
+    const priceValue = parseFloat(formData.price);
+    if (isNaN(priceValue) || priceValue <= 0) {
+      return toast({ variant: "destructive", title: "Erro", description: "O preço deve ser um valor positivo." });
+    }
+
     setIsSaving(true);
     try {
-      const uploadedUrls: string[] = [];
-
+      const base64Images: string[] = [];
       for (const img of images) {
-        const timestamp = Date.now();
-        const filename = img.file.name.replace(/[^a-zA-Z0-9.]/g, "_");
-        const storagePath = `products/${user.uid}/${timestamp}_${filename}`;
-        const storageRef = ref(storage, storagePath);
-        
-        await uploadBytes(storageRef, img.file);
-        const url = await getDownloadURL(storageRef);
-        uploadedUrls.push(url);
+        const b64 = await toBase64(img.file);
+        base64Images.push(b64);
       }
 
       await addDoc(collection(db, "products"), {
         ...formData,
         name: formData.name.trim(),
-        price: parseFloat(formData.price),
-        sellerId: user.uid,
+        price: priceValue,
+        sellerId: user.uid, // Segurança: UID garantido pelo Auth
         boothId:  user.uid,
         createdAt: serverTimestamp(),
-        imageUrl: uploadedUrls[0] || "",
-        gallery: uploadedUrls
+        imageUrl: base64Images[0] || "", // Fallback vazio se não houver imagem
+        gallery: base64Images
       });
 
       toast({ title: "Sucesso!", description: "Produto cadastrado com sucesso." });
       router.push("/dashboard/produtos");
     } catch (error: any) {
       console.error("Erro ao salvar produto:", error);
-      toast({ variant: "destructive", title: "Erro ao salvar", description: "Tente novamente mais tarde." });
+      toast({ variant: "destructive", title: "Erro ao salvar", description: "Não foi possível salvar os dados no Firestore." });
     } finally {
       setIsSaving(false);
     }
@@ -214,7 +225,7 @@ export default function NewProductPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">{t('dashboard.newProduct.nameLabel')}</Label>
+            <Label htmlFor="name">{t('dashboard.newProduct.nameLabel')} *</Label>
             <Input 
               id="name" 
               placeholder="Ex: Vaso de Cerâmica Azul Marinho" 
@@ -227,7 +238,7 @@ export default function NewProductPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>{t('dashboard.newProduct.categoryLabel')}</Label>
+              <Label>{t('dashboard.newProduct.categoryLabel')} *</Label>
               <Select 
                 value={formData.category} 
                 onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
@@ -244,7 +255,7 @@ export default function NewProductPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">{t('dashboard.newProduct.priceLabel')}</Label>
+              <Label htmlFor="price">{t('dashboard.newProduct.priceLabel')} *</Label>
               <Input 
                 id="price" 
                 type="number" 

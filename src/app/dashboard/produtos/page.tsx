@@ -33,10 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { auth, db, storage } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { collection, query, where, getDocs, deleteDoc, doc, orderBy, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORIES } from "@/lib/constants";
 import { useTranslation } from "@/context/language-context";
@@ -53,7 +52,6 @@ interface Product {
   createdAt?: any;
 }
 
-// Global variable to persist cache across dashboard navigation
 let productsCache: Product[] = [];
 
 export default function ProductsPage() {
@@ -75,47 +73,39 @@ export default function ProductsPage() {
     shortDescription: "",
     isActive: true,
   });
-  const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const { toast } = useToast();
   const router = useRouter();
 
+  const toBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const fetchProducts = useCallback(async (userId: string) => {
     setIsLoading(true);
     try {
-      let q;
-      try {
-        q = query(
-          collection(db, "products"),
-          where("sellerId", "==", userId),
-          orderBy("createdAt", "desc")
-        );
-        const querySnapshot = await getDocs(q);
-        const items: Product[] = [];
-        querySnapshot.forEach((doc) => {
-          items.push({ id: doc.id, ...doc.data() } as Product);
-        });
-        setProducts(items);
-        productsCache = items; // Update cache
-      } catch (indexError) {
-        q = query(
-          collection(db, "products"),
-          where("sellerId", "==", userId)
-        );
-        const querySnapshot = await getDocs(q);
-        const items: Product[] = [];
-        querySnapshot.forEach((doc) => {
-          items.push({ id: doc.id, ...doc.data() } as Product);
-        });
-        const sorted = items.sort((a, b) => {
-          const dateA = a.createdAt?.seconds || 0;
-          const dateB = b.createdAt?.seconds || 0;
-          return dateB - dateA;
-        });
-        setProducts(sorted);
-        productsCache = sorted; // Update cache
-      }
+      let q = query(
+        collection(db, "products"),
+        where("sellerId", "==", userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const items: Product[] = [];
+      querySnapshot.forEach((doc) => {
+        items.push({ id: doc.id, ...doc.data() } as Product);
+      });
+      const sorted = items.sort((a, b) => {
+        const dateA = a.createdAt?.seconds || 0;
+        const dateB = b.createdAt?.seconds || 0;
+        return dateB - dateA;
+      });
+      setProducts(sorted);
+      productsCache = sorted;
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
       toast({ 
@@ -134,7 +124,6 @@ export default function ProductsPage() {
       setAuthLoading(false);
       
       if (firebaseUser) {
-        // Show cached products immediately to prevent data loss feeling on remount
         if (productsCache.length > 0) {
           setProducts(productsCache);
         }
@@ -171,7 +160,6 @@ export default function ProductsPage() {
       isActive: product.isActive,
     });
     setImagePreview(product.imageUrl);
-    setNewImageFile(null);
     setIsEditDialogOpen(true);
   };
 
@@ -179,30 +167,25 @@ export default function ProductsPage() {
     e.preventDefault();
     if (!editingProduct || !user) return;
 
+    // Validação
+    const priceValue = parseFloat(editFormData.price);
+    if (!editFormData.name.trim() || isNaN(priceValue)) {
+      return toast({ variant: "destructive", title: "Erro", description: "Preencha todos os campos obrigatórios." });
+    }
+
     setIsSaving(true);
     try {
-      let finalImageUrl = editingProduct.imageUrl;
-
-      if (newImageFile) {
-        const timestamp = Date.now();
-        const filename = newImageFile.name.replace(/[^a-zA-Z0-9.]/g, "_");
-        const storagePath = `products/${user.uid}/${timestamp}_${filename}`;
-        const storageRef = ref(storage, storagePath);
-        
-        await uploadBytes(storageRef, newImageFile);
-        finalImageUrl = await getDownloadURL(storageRef);
-      }
-
       const productRef = doc(db, "products", editingProduct.id);
       const updateData = {
         name: editFormData.name.trim(),
-        price: parseFloat(editFormData.price),
+        price: priceValue,
         category: editFormData.category,
         description: editFormData.description.trim(),
         shortDescription: editFormData.shortDescription.trim(),
         isActive: editFormData.isActive,
-        imageUrl: finalImageUrl,
+        imageUrl: imagePreview || "", // Pode ser o base64 novo ou a URL antiga
         updatedAt: new Date(),
+        sellerId: user.uid, // Segurança: UID garantido
       };
 
       await updateDoc(productRef, updateData);
@@ -223,15 +206,15 @@ export default function ProductsPage() {
     }
   };
 
-  const onImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setNewImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const b64 = await toBase64(file);
+        setImagePreview(b64);
+      } catch (err) {
+        toast({ title: "Erro", description: "Falha ao processar imagem.", variant: "destructive" });
+      }
     }
   };
 
@@ -404,7 +387,7 @@ export default function ProductsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-name">{t('dashboard.products.table.name')}</Label>
+                <Label htmlFor="edit-name">{t('dashboard.products.table.name')} *</Label>
                 <Input 
                   id="edit-name" 
                   value={editFormData.name}
@@ -415,7 +398,7 @@ export default function ProductsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t('dashboard.products.table.category')}</Label>
+                  <Label>{t('dashboard.products.table.category')} *</Label>
                   <Select 
                     value={editFormData.category} 
                     onValueChange={(val) => setEditFormData(prev => ({ ...prev, category: val }))}
@@ -431,7 +414,7 @@ export default function ProductsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-price">{t('dashboard.products.table.price')}</Label>
+                  <Label htmlFor="edit-price">{t('dashboard.products.table.price')} *</Label>
                   <Input 
                     id="edit-price" 
                     type="number" 
