@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { use } from "react";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, MessageSquare, Share2, ArrowLeft, Loader2, Store as StoreIcon, ShoppingBag, User } from "lucide-react";
 import Image from "next/image";
@@ -76,17 +74,18 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           });
         }
 
-        const productsQuery = query(
-          collection(db, "products"),
-          where("sellerId", "==", id),
-          where("isActive", "==", true)
+        let snap = await getDocs(
+          query(collection(db, "products"),
+          where("boothId", "==", id),
+          where("isActive", "==", true))
         );
-        const productsSnap = await getDocs(productsQuery);
-        const fetchedProducts: Product[] = [];
-        productsSnap.forEach((doc) => {
-          fetchedProducts.push({ id: doc.id, ...doc.data() } as Product);
-        });
-        setProducts(fetchedProducts);
+        if (snap.empty) {
+          snap = await getDocs(
+            query(collection(db, "products"),
+              where("sellerId", "==", id))
+          );
+        }
+        setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() } as Product)));
 
         if (auth.currentUser) {
           const ratingId = `${auth.currentUser.uid}_${id}`;
@@ -194,40 +193,30 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-            <p className="text-muted-foreground font-medium">Carregando detalhes...</p>
-          </div>
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground font-medium">Carregando detalhes...</p>
         </div>
-        <Footer />
       </div>
     );
   }
 
   if (!booth) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <StoreIcon className="h-16 w-16 text-muted-foreground mb-4 opacity-20" />
-          <h1 className="text-2xl font-bold mb-2">Barraca não encontrada</h1>
-          <p className="text-muted-foreground mb-6">Esta barraca pode ter sido removida.</p>
-          <Button asChild>
-            <Link href="/explore">Voltar para Explorar</Link>
-          </Button>
-        </div>
-        <Footer />
+      <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-[400px]">
+        <StoreIcon className="h-16 w-16 text-muted-foreground mb-4 opacity-20" />
+        <h1 className="text-2xl font-bold mb-2">Barraca não encontrada</h1>
+        <p className="text-muted-foreground mb-6">Esta barraca pode ter sido removida.</p>
+        <Button asChild>
+          <Link href="/explore">Voltar para Explorar</Link>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
       <main className="flex-1">
         <div className="relative h-[300px] md:h-[400px] bg-muted">
           {booth.coverImageUrl && (
@@ -393,8 +382,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           </section>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

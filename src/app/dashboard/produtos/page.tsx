@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, Package, Edit2, Trash2, Search, Loader2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,9 @@ interface Product {
   createdAt?: any;
 }
 
+// Global variable to persist cache across dashboard navigation
+let productsCache: Product[] = [];
+
 export default function ProductsPage() {
   const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
@@ -78,17 +81,6 @@ export default function ProductsPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setAuthLoading(false);
-      if (!firebaseUser) {
-        router.push("/login");
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
-
   const fetchProducts = useCallback(async (userId: string) => {
     setIsLoading(true);
     try {
@@ -105,6 +97,7 @@ export default function ProductsPage() {
           items.push({ id: doc.id, ...doc.data() } as Product);
         });
         setProducts(items);
+        productsCache = items; // Update cache
       } catch (indexError) {
         q = query(
           collection(db, "products"),
@@ -115,11 +108,13 @@ export default function ProductsPage() {
         querySnapshot.forEach((doc) => {
           items.push({ id: doc.id, ...doc.data() } as Product);
         });
-        setProducts(items.sort((a, b) => {
+        const sorted = items.sort((a, b) => {
           const dateA = a.createdAt?.seconds || 0;
           const dateB = b.createdAt?.seconds || 0;
           return dateB - dateA;
-        }));
+        });
+        setProducts(sorted);
+        productsCache = sorted; // Update cache
       }
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
@@ -134,17 +129,31 @@ export default function ProductsPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      fetchProducts(user.uid);
-    }
-  }, [user, authLoading, fetchProducts]);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setAuthLoading(false);
+      
+      if (firebaseUser) {
+        // Show cached products immediately to prevent data loss feeling on remount
+        if (productsCache.length > 0) {
+          setProducts(productsCache);
+        }
+        fetchProducts(firebaseUser.uid);
+      } else {
+        router.push("/login");
+      }
+    });
+    return () => unsubscribe();
+  }, [router, fetchProducts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
 
     try {
       await deleteDoc(doc(db, "products", id));
-      setProducts(prev => prev.filter(p => p.id !== id));
+      const updated = products.filter(p => p.id !== id);
+      setProducts(updated);
+      productsCache = updated;
       toast({ title: "Produto excluído", description: "O item foi removido do seu catálogo." });
     } catch (error) {
       toast({ variant: "destructive", title: "Erro", description: "Não foi possível excluir o produto." });
@@ -198,9 +207,11 @@ export default function ProductsPage() {
 
       await updateDoc(productRef, updateData);
 
-      setProducts(prev => prev.map(p => 
+      const updated = products.map(p => 
         p.id === editingProduct.id ? { ...p, ...updateData } : p
-      ));
+      );
+      setProducts(updated);
+      productsCache = updated;
 
       toast({ title: "Sucesso!", description: "Produto atualizado com sucesso." });
       setIsEditDialogOpen(false);
@@ -264,7 +275,7 @@ export default function ProductsPage() {
       </div>
 
       <div className="border rounded-2xl overflow-hidden shadow-sm bg-white">
-        {isLoading ? (
+        {isLoading && products.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-muted-foreground">Carregando catálogo...</p>

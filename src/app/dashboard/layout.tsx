@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { Navbar } from "@/components/navbar";
 import { 
   LayoutDashboard, 
   Store, 
@@ -58,8 +57,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">
-      <Navbar />
-      
       <div className="flex-1 flex flex-col md:flex-row container mx-auto px-4 py-8 gap-8">
         {/* Mobile Nav */}
         <div className="md:hidden flex gap-2 overflow-x-auto pb-4 border-b mb-4 no-scrollbar">

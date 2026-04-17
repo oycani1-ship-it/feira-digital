@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
@@ -13,12 +12,9 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Store, Search, X, MapPin, Star, ShoppingBag } from "lucide-react";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { Store, Search, X, MapPin, Star } from "lucide-react";
 import { useTranslation } from "@/context/language-context";
 import { CATEGORIAS_PLATAFORMA, ESTADOS_BR } from "@/lib/constants";
-import { LoomLoader } from "@/components/ui/loom-loader";
 
 interface Booth {
   id: string;
@@ -98,7 +94,6 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
       <main className="flex-1">
         <div className="container mx-auto px-4 py-16 max-w-6xl">
           <div className="mb-12 text-center md:text-left">
@@ -238,7 +233,6 @@ export default function ExplorePage() {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

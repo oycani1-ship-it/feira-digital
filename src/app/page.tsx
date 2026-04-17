@@ -1,11 +1,8 @@
-
 "use client";
 
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
 import { WovenText } from "@/components/ui/woven-text";
 import { StampButton } from "@/components/ui/stamp-button";
 import { KraftCard } from "@/components/ui/kraft-card";
@@ -129,8 +126,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      
       <main>
         {/* HERO SECTION */}
         <section ref={heroRef} className="relative min-h-[90vh] flex flex-col justify-center px-4 lg:px-12 linen-grid overflow-hidden">
@@ -400,8 +395,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

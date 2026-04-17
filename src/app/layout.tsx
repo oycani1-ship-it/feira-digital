@@ -3,6 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/context/language-context";
 import { ArtisanCursor } from "@/components/ui/artisan-cursor";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
   title: 'FEIRA | Artisan Craft Collective',
@@ -23,7 +25,13 @@ export default function RootLayout({
       <body className="antialiased overflow-x-hidden paper-grain">
         <LanguageProvider>
           <ArtisanCursor />
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
           <Toaster />
         </LanguageProvider>
       </body>

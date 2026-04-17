@@ -142,6 +142,7 @@ export default function NewProductPage() {
         name: formData.name.trim(),
         price: parseFloat(formData.price),
         sellerId: user.uid,
+        boothId:  user.uid,
         createdAt: serverTimestamp(),
         imageUrl: uploadedUrls[0] || "",
         gallery: uploadedUrls
