@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -147,9 +148,9 @@ export default function MinhaBarracaPage() {
         sellerId:     user.uid,
         sellerEmail:  user.email || "",
         nome:         nome.trim(),
-        name:         nome.trim(), // Compatibilidade com versões que usam 'name'
+        name:         nome.trim(), // Compatibilidade
         bio:          bio.trim(),
-        description:  bio.trim(), // Compatibilidade com versões que usam 'description'
+        description:  bio.trim(), // Compatibilidade
         categoria:    categoria,
         category:     categoria,    // Compatibilidade
         localizacao:  localizacao.trim(),
