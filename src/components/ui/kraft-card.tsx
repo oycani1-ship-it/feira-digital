@@ -58,7 +58,7 @@ export function KraftCard({ children, className, dataCursor = "inspect" }: Kraft
         style={{
           background: useTransform(
             [x, y],
-            ([vx, vy]: number[]) => `radial-gradient(circle at ${(vx + 0.5) * 100}% ${(vy + 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 180px)`
+            ([vx, vy]: number[]) => `radial-gradient(circle at ${(vx + 0.5) * 100}% ${(vy + 0.5) * 100}%, rgba(255,255,255,0.12) 0%, rgba(255, 255, 255, 0) 180px)`
           )
         }}
       />

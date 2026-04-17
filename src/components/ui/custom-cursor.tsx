@@ -67,7 +67,7 @@ export function CustomCursor() {
               animate={{
                 width: cursorType === "pointer" ? 56 : cursorType === "text" ? 2 : 32,
                 height: cursorType === "pointer" ? 56 : cursorType === "text" ? 28 : 32,
-                backgroundColor: cursorType === "pointer" ? "rgba(200, 134, 26, 0.15)" : "transparent",
+                backgroundColor: cursorType === "pointer" ? "rgba(200, 134, 26, 0.15)" : "rgba(200, 134, 26, 0)",
                 borderRadius: cursorType === "text" ? "0px" : "100%",
                 rotate: cursorType === "cut" ? 15 : 0,
               }}
