@@ -12,7 +12,7 @@ const BOOTHS_COLLECTION = "booths";
 const PRODUCTS_COLLECTION = "products";
 const RATINGS_COLLECTION = "ratings";
 
-const SEED_BOOTHS = [
+export const SEED_BOOTHS = [
   {
     id: "artesao_ceramica_01",
     nome: "Ateliê Barro Vivo",
@@ -87,7 +87,7 @@ const SEED_BOOTHS = [
   }
 ];
 
-const SEED_PRODUCTS = [
+export const SEED_PRODUCTS = [
   // Produtos Ateliê Barro Vivo
   {
     nome: "Vaso Noiva do Jequitinhonha",

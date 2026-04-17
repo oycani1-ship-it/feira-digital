@@ -11,6 +11,7 @@ service cloud.firestore {
 
     // Regras para Barracas (Booths)
     match /booths/{boothId} {
+      allow write: if true;
       allow read: if true;
       // Garante que o boothId é igual ao UID do criador e sellerId confere
       allow create: if request.auth != null 
@@ -23,6 +24,7 @@ service cloud.firestore {
 
     // Regras para Produtos (Products)
     match /products/{productId} {
+      allow write: if true;
       allow read: if true;
       // Garante que o sellerId enviado no corpo é o do usuário logado
       allow create: if request.auth != null 

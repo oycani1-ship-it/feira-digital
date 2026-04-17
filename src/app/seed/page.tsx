@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { runSeed } from "@/lib/seed-data";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Database, CheckCircle2, AlertCircle } from "lucide-react";
@@ -17,7 +17,9 @@ export default function SeedPage() {
     
     setStatus("loading");
     try {
-      await runSeed();
+      const res = await fetch("/api/seed", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Seed failed");
       setStatus("success");
     } catch (err: any) {
       console.error(err);

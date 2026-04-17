@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRef, useState, useEffect } from "react";
@@ -12,7 +13,7 @@ import { LoomLoader } from "@/components/ui/loom-loader";
 import { useTranslation } from "@/context/language-context";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { db } from "@/lib/firebase";
-import { collection, query, where, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { Store, ShoppingBag, ImageIcon, Star, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -39,6 +40,31 @@ interface Booth {
   isActive?: boolean;
 }
 
+// Componente utilitário para renderizar imagens com fallback
+function SafeArtisanImage({ src, alt, fill, className, sizes }: { src?: string, alt: string, fill?: boolean, className?: string, sizes?: string }) {
+  const [error, setError] = useState(false);
+
+  if (!src || error) {
+    return (
+      <div className={`flex items-center justify-center bg-muted/30 ${className}`}>
+        <ImageIcon className="h-8 w-8 text-muted-foreground/20" />
+      </div>
+    );
+  }
+
+  return (
+    <Image 
+      src={src} 
+      alt={alt} 
+      fill={fill} 
+      className={className} 
+      sizes={sizes}
+      onError={() => setError(true)}
+      unoptimized={src.startsWith('data:')} // Melhora performance de base64 no Next.js
+    />
+  );
+}
+
 export default function Home() {
   const { t } = useTranslation();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -60,7 +86,6 @@ export default function Home() {
     if (heroRef.current) setIsReady(true);
     const timer = setTimeout(() => setIsLoaded(true), 1200);
 
-    // Listener para Produtos (Sincronização em tempo real)
     const prodQuery = query(
       collection(db, "products"),
       orderBy("createdAt", "desc"),
@@ -76,7 +101,8 @@ export default function Home() {
             ...data,
             nome: data.nome ?? data.name ?? "Sem nome",
             preco: data.preco ?? data.price ?? 0,
-            categoria: data.categoria ?? data.category ?? ""
+            categoria: data.categoria ?? data.category ?? "",
+            imageUrl: data.imageUrl ?? data.capaUrl ?? "" // Suporta ambos os campos por segurança
           } as Product;
         })
         .filter(p => p.isActive !== false)
@@ -89,7 +115,6 @@ export default function Home() {
       setLoadingData(false);
     });
 
-    // Listener para Barracas (Sincronização em tempo real)
     const boothQuery = query(
       collection(db, "booths"),
       orderBy("updatedAt", "desc"),
@@ -146,7 +171,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <main>
-        {/* HERO SECTION */}
         <section ref={heroRef} className="relative min-h-[90vh] flex flex-col justify-center px-4 lg:px-12 linen-grid overflow-hidden">
           <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 z-10">
@@ -185,11 +209,10 @@ export default function Home() {
                 className="relative w-full h-full border border-border p-4 bg-card shadow-lg rotate-3"
               >
                 <div className="relative w-full h-full overflow-hidden">
-                  <Image 
+                  <SafeArtisanImage 
                     src="https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&q=80&w=1000"
                     alt="Artisan Craft"
                     fill
-                    priority
                     className="object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                     sizes="(max-width: 1024px) 100vw, 40vw"
                   />
@@ -204,7 +227,6 @@ export default function Home() {
 
         <TornDivider />
 
-        {/* PRODUCTS SECTION (OBRAS) */}
         <section className="py-32 px-4 lg:px-12">
           <div className="container mx-auto">
             <div className="mb-24 flex flex-col items-center text-center">
@@ -227,17 +249,13 @@ export default function Home() {
                   <KraftCard key={product.id} className={i % 2 === 0 ? "rotate-1" : "-rotate-1"}>
                     <Link href={`/barraca/${product.boothId}`} className="block group">
                       <div className="aspect-[3/4] relative mb-6 overflow-hidden bg-muted flex items-center justify-center">
-                        {product.imageUrl ? (
-                          <Image 
-                            src={product.imageUrl}
-                            alt={product.nome ?? "Produto"}
-                            fill
-                            className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
-                          />
-                        ) : (
-                          <ImageIcon className="h-12 w-12 text-muted-foreground/20" />
-                        )}
+                        <SafeArtisanImage 
+                          src={product.imageUrl}
+                          alt={product.nome ?? "Produto"}
+                          fill
+                          className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
+                        />
                         <div className="absolute top-4 left-4">
                           <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm text-[10px] font-mono-tag uppercase tracking-widest border-none">
                             {(product.categoria ?? "").toUpperCase()}
@@ -271,7 +289,6 @@ export default function Home() {
 
         <TornDivider />
 
-        {/* FEATURED BOOTHS */}
         <section className="py-32 px-4 lg:px-12 bg-surface/30">
           <div className="container mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
@@ -298,41 +315,29 @@ export default function Home() {
                     whileHover={{ y: -8 }}
                     className={`relative aspect-[4/5] bg-card shadow-lg border border-border/40 overflow-hidden group ${i % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}
                   >
-                    {booth.capaUrl ? (
-                      <Image 
-                        src={booth.capaUrl} 
-                        alt={booth.nome ?? "Barraca"} 
-                        fill 
-                        className="object-cover grayscale group-hover:scale-105 group-hover:grayscale-0 transition-all duration-700"
-                        sizes="(max-width: 768px) 100vw, 25vw"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
-                         <Store className="h-12 w-12 text-muted-foreground/10" />
-                      </div>
-                    )}
+                    <SafeArtisanImage 
+                      src={booth.capaUrl} 
+                      alt={booth.nome ?? "Barraca"} 
+                      fill 
+                      className="object-cover grayscale group-hover:scale-105 group-hover:grayscale-0 transition-all duration-700"
+                      sizes="(max-width: 768px) 100vw, 25vw"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="h-10 w-10 rounded-full border-2 border-white overflow-hidden bg-white shrink-0">
-                          {booth.logoUrl ? (
-                            <Image src={booth.logoUrl} alt={booth.nome ?? "Logo"} width={40} height={40} className="object-cover" />
-                          ) : (
-                            <div className="h-full w-full bg-primary flex items-center justify-center text-white text-[10px]">
-                              {(booth.nome ?? "B").charAt(0)}
-                            </div>
-                          )}
+                          <SafeArtisanImage src={booth.logoUrl} alt={booth.nome ?? "Logo"} width={40} height={40} className="object-cover" />
                         </div>
                         <div>
                           <h4 className="font-display text-white text-xl leading-none break-keep hyphens-none">{booth.nome}</h4>
-                          <span className="font-mono-tag text-[8px] text-white/60 uppercase tracking-widest">{booth.categoria}</span>
+                          <span className="font-mono-tag text-[8px] text-white/60 uppercase tracking-widest">{(booth.categoria ?? "").toUpperCase()}</span>
                         </div>
                       </div>
                       
                       <div className="flex justify-between items-center text-[9px] text-white/80 font-mono-tag uppercase">
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-2 w-2" /> {booth.localizacao}, {booth.estado}
+                          <MapPin className="h-2 w-2" /> {booth.localizacao ?? ""}, {booth.estado ?? ""}
                         </div>
                         {(booth.avgRating ?? 0) > 0 && (
                           <div className="flex items-center gap-1 text-gold">
@@ -350,7 +355,6 @@ export default function Home() {
 
         <TornDivider />
 
-        {/* FULL BLEED - AUTHENTICITY */}
         <section className="h-[80vh] relative overflow-hidden">
           <Image 
             src="https://images.unsplash.com/photo-1541252260730-0412e8e2108e?auto=format&fit=crop&q=80&w=1920"
@@ -383,7 +387,6 @@ export default function Home() {
 
         <TornDivider />
 
-        {/* CALL TO ACTION */}
         <section className="py-32 px-4 lg:px-12 bg-surface">
           <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
             <div>
