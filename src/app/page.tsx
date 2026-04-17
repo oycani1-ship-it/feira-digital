@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRef, useState, useEffect } from "react";
@@ -24,6 +25,7 @@ interface Product {
   boothNome?: string;
   boothId: string;
   categoria: string;
+  isActive?: boolean;
 }
 
 interface Booth {
@@ -35,6 +37,7 @@ interface Booth {
   localizacao: string;
   estado: string;
   avgRating?: number;
+  isActive?: boolean;
 }
 
 export default function Home() {
@@ -58,19 +61,19 @@ export default function Home() {
     if (heroRef.current) setIsReady(true);
     const timer = setTimeout(() => setIsLoaded(true), 1200);
 
-    // Listener em tempo real para Produtos
+    // Listener para Produtos (Filtragem client-side para compatibilidade)
     const prodQuery = query(
       collection(db, "products"),
-      where("isActive", "==", true),
       orderBy("createdAt", "desc"),
-      limit(6)
+      limit(12)
     );
 
     const unsubscribeProducts = onSnapshot(prodQuery, (snapshot) => {
-      const fetchedProds = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Product[];
+      const fetchedProds = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Product))
+        .filter(p => p.isActive !== false) // Mostra se for true ou undefined
+        .slice(0, 6);
+      
       setProducts(fetchedProds);
       setLoadingData(false);
     }, (err) => {
@@ -78,19 +81,19 @@ export default function Home() {
       setLoadingData(false);
     });
 
-    // Listener em tempo real para Barracas
+    // Listener para Barracas (Filtragem client-side para compatibilidade)
     const boothQuery = query(
       collection(db, "booths"),
-      where("isActive", "==", true),
-      orderBy("createdAt", "desc"),
-      limit(4)
+      orderBy("updatedAt", "desc"),
+      limit(12)
     );
 
     const unsubscribeBooths = onSnapshot(boothQuery, (snapshot) => {
-      const fetchedBooths = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Booth[];
+      const fetchedBooths = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Booth))
+        .filter(b => b.isActive !== false) // Mostra se for true ou undefined
+        .slice(0, 4);
+      
       setBooths(fetchedBooths);
     }, (err) => {
       console.error("Error listening to booths:", err);
@@ -231,7 +234,7 @@ export default function Home() {
                       </p>
                     </Link>
                     <div className="flex justify-end">
-                      <PriceTag price={product.preco} origin={product.categoria} />
+                      <PriceTag price={product.preco ?? 0} origin={product.categoria ?? ""} />
                     </div>
                   </KraftCard>
                 ))}
@@ -304,14 +307,14 @@ export default function Home() {
                           )}
                         </div>
                         <div>
-                          <h4 className="font-display text-white text-xl leading-none">{booth.nome}</h4>
-                          <span className="font-mono-tag text-[8px] text-white/60 uppercase tracking-widest">{booth.categoria}</span>
+                          <h4 className="font-display text-white text-xl leading-none">{booth.nome ?? "Sem nome"}</h4>
+                          <span className="font-mono-tag text-[8px] text-white/60 uppercase tracking-widest">{booth.categoria ?? ""}</span>
                         </div>
                       </div>
                       
                       <div className="flex justify-between items-center text-[9px] text-white/80 font-mono-tag uppercase">
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-2 w-2" /> {booth.localizacao}, {booth.estado}
+                          <MapPin className="h-2 w-2" /> {booth.localizacao ?? ""}, {booth.estado ?? ""}
                         </div>
                         {booth.avgRating && booth.avgRating > 0 && (
                           <div className="flex items-center gap-1 text-gold">
