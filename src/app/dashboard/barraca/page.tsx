@@ -137,7 +137,7 @@ export default function MinhaBarracaPage() {
         instagram:   instagram.trim(),
         logoUrl:     finalLogoUrl,
         capaUrl:     finalCapaUrl,
-        isActive:    true,
+        isActive:    true, // FIX 4: Sempre garantir que está ativo ao salvar
         updatedAt:   serverTimestamp(),
         nomeNormalizado: nome.trim().toLowerCase()
           .normalize("NFD").replace(/[\u0300-\u036f]/g, ""),

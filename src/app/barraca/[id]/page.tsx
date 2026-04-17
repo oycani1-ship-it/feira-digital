@@ -67,7 +67,17 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         const boothSnap = await getDoc(boothRef);
         
         if (boothSnap.exists()) {
-          setBooth({ id: boothSnap.id, ...boothSnap.data() } as Booth);
+          const bData = boothSnap.data();
+          setBooth({ 
+            id: boothSnap.id, 
+            ...bData,
+            name: bData.nome ?? bData.name ?? "Sem nome",
+            sellerName: bData.sellerName ?? "Artesão",
+            category: bData.categoria ?? bData.category ?? "",
+            city: bData.localizacao ?? bData.city ?? "",
+            state: bData.estado ?? bData.state ?? "",
+            coverImageUrl: bData.capaUrl ?? bData.coverImageUrl ?? ""
+          } as Booth);
           
           await updateDoc(boothRef, {
             views: increment(1)
@@ -99,7 +109,13 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           );
         }
         setProducts(
-          productsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product))
+          productsSnap.docs.map(d => ({ 
+            id: d.id, 
+            ...d.data(),
+            name: d.data().name ?? d.data().nome ?? "Sem nome",
+            price: d.data().price ?? d.data().preco ?? 0,
+            description: d.data().description ?? d.data().descricao ?? ""
+          } as Product))
         );
 
         if (auth.currentUser) {
@@ -132,8 +148,8 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     const message = productName 
-      ? `Olá! Vi sua barraca ${booth.name} na Feira Digital e tenho interesse no produto: ${productName}`
-      : `Olá! Vi sua barraca ${booth.name} na Feira Digital e gostaria de mais informações.`;
+      ? `Olá! Vi sua barraca ${booth.name ?? ""} na Feira Digital e tenho interesse no produto: ${productName}`
+      : `Olá! Vi sua barraca ${booth.name ?? ""} na Feira Digital e gostaria de mais informações.`;
     window.open(`https://wa.me/${booth.whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -237,7 +253,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           {booth.coverImageUrl && (
             <Image 
               src={booth.coverImageUrl} 
-              alt={booth.name} 
+              alt={booth.name ?? "Capa"} 
               fill 
               sizes="100vw"
               className="object-cover brightness-75" 
@@ -258,7 +274,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                 {booth.logoUrl ? (
                   <Image 
                     src={booth.logoUrl} 
-                    alt={booth.name} 
+                    alt={booth.name ?? "Logo"} 
                     fill 
                     sizes="(max-width: 768px) 128px, 160px"
                     className="object-cover" 
@@ -273,8 +289,8 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
               <div className="flex-1 space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <h1 className="font-headline text-4xl font-bold mb-1">{booth.name}</h1>
-                    <p className="text-muted-foreground font-medium flex items-center gap-2"><User className="h-4 w-4" /> {booth.sellerName}</p>
+                    <h1 className="font-headline text-4xl font-bold mb-1">{booth.name ?? "Sem nome"}</h1>
+                    <p className="text-muted-foreground font-medium flex items-center gap-2"><User className="h-4 w-4" /> {booth.sellerName ?? "Artesão"}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={() => handleWhatsApp()} className="bg-primary hover:bg-primary/90 font-bold px-6 h-12 rounded-full">
@@ -286,18 +302,18 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
 
                 <div className="flex flex-wrap gap-6 text-sm font-medium">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <MapPin className="h-4 w-4 text-primary" /> {booth.city}, {booth.state}
+                    <MapPin className="h-4 w-4 text-primary" /> {booth.city ?? ""}, {booth.state ?? ""}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Star className="h-4 w-4 text-amber-500 fill-amber-500" /> 
-                    <span className="font-bold">{booth.averageRating?.toFixed(1) || "0.0"}</span>
-                    <span className="text-muted-foreground">({booth.totalRatings || 0} {t('boothDetail.evaluations')})</span>
+                    <span className="font-bold">{(booth.averageRating ?? 0).toFixed(1)}</span>
+                    <span className="text-muted-foreground">({booth.totalRatings ?? 0} {t('boothDetail.evaluations')})</span>
                   </div>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none rounded-full px-4">{booth.category}</Badge>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none rounded-full px-4">{booth.category?.toUpperCase()}</Badge>
                 </div>
 
                 <p className="text-muted-foreground leading-relaxed max-w-3xl text-lg">
-                  {booth.description}
+                  {booth.description || ""}
                 </p>
 
                 <div className="pt-6 border-t mt-6">
@@ -333,7 +349,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                       {product.imageUrl && (
                         <Image 
                           src={product.imageUrl} 
-                          alt={product.name} 
+                          alt={product.name ?? "Produto"} 
                           fill 
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover transition-smooth group-hover:scale-105" 
@@ -350,7 +366,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                                 {product.imageUrl && (
                                   <Image 
                                     src={product.imageUrl} 
-                                    alt={product.name} 
+                                    alt={product.name ?? "Produto"} 
                                     fill 
                                     sizes="(max-width: 768px) 100vw, 600px"
                                     className="object-cover" 
@@ -359,13 +375,13 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                               </div>
                               <div className="p-8 space-y-6">
                                 <DialogHeader>
-                                  <DialogTitle className="font-headline text-4xl font-bold">{product.name}</DialogTitle>
+                                  <DialogTitle className="font-headline text-4xl font-bold">{product.name ?? "Sem nome"}</DialogTitle>
                                 </DialogHeader>
                                 <div className="text-3xl font-bold text-primary">
-                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price ?? 0)}
                                 </div>
                                 <p className="text-muted-foreground leading-relaxed">
-                                  {product.description}
+                                  {product.description || ""}
                                 </p>
                                 <div className="pt-4 space-y-3">
                                   <Button onClick={() => handleWhatsApp(product.name)} className="w-full bg-primary hover:bg-primary/90 h-14 rounded-full text-lg font-bold">
@@ -380,9 +396,9 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                     </div>
                     <CardContent className="p-5">
-                      <h3 className="font-bold text-xl mb-1 truncate">{product.name}</h3>
+                      <h3 className="font-bold text-xl mb-1 truncate">{product.name ?? "Sem nome"}</h3>
                       <div className="text-primary font-bold text-lg">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price ?? 0)}
                       </div>
                     </CardContent>
                   </Card>

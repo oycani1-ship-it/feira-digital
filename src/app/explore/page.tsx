@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, limit, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import Image from "next/image";
@@ -39,17 +39,16 @@ export default function ExplorePage() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    // Listener em tempo real para as barracas na página de exploração
     const q = query(
       collection(db, "booths"), 
-      where("isActive", "==", true),
-      orderBy("createdAt", "desc"),
       limit(100)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booth));
-      setAllBooths(data);
+      // Ordenação client-side para evitar necessidade de índices complexos no Firebase
+      const sortedData = data.sort((a, b) => (a.nome ?? "").localeCompare(b.nome ?? ""));
+      setAllBooths(sortedData);
       setLoading(false);
     }, (err) => {
       console.error("Error listening to booths in explore:", err);
@@ -63,10 +62,13 @@ export default function ExplorePage() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   const filtered = allBooths.filter(b => {
-    const nome = normalizar(b.nome || "");
-    const cat  = b.categoria || "";
-    const loc  = b.localizacao || "";
-    const uf   = b.estado || "";
+    // Filtro isActive manual no cliente se necessário, ou mantido no banco
+    if (b.isActive === false) return false;
+
+    const nome = normalizar(b.nome ?? "");
+    const cat  = b.categoria ?? "";
+    const loc  = b.localizacao ?? "";
+    const uf   = b.estado ?? "";
 
     const passaSearch = !search.trim() ||
       nome.includes(normalizar(search)) ||
@@ -166,7 +168,7 @@ export default function ExplorePage() {
                       {booth.capaUrl ? (
                         <Image
                           src={booth.capaUrl}
-                          alt={booth.nome}
+                          alt={booth.nome ?? "Capa"}
                           fill
                           className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
                           sizes="(max-width: 768px) 100vw, 400px"
@@ -178,7 +180,7 @@ export default function ExplorePage() {
                       )}
                       <div className="absolute top-4 right-4">
                         <Badge className="bg-card/90 backdrop-blur-sm text-primary border-none font-mono-tag text-[8px] uppercase tracking-widest">
-                          {booth.categoria}
+                          {booth.categoria?.toUpperCase()}
                         </Badge>
                       </div>
                     </div>
@@ -189,13 +191,13 @@ export default function ExplorePage() {
                           <Image src={booth.logoUrl} alt="Logo" width={64} height={64} className="object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-primary text-white text-xl font-display">
-                            {booth.nome.charAt(0)}
+                            {booth.nome?.charAt(0) ?? "?"}
                           </div>
                         )}
                       </div>
                       
                       <h2 className="font-display text-3xl mb-3 mt-4 group-hover:text-primary transition-colors">
-                        {booth.nome}
+                        {booth.nome ?? "Sem nome"}
                       </h2>
                       
                       <p className="text-sm text-muted-foreground font-body line-clamp-2 mb-8 leading-relaxed">
@@ -205,12 +207,12 @@ export default function ExplorePage() {
                       <div className="mt-auto pt-6 border-t border-border/40 flex items-center justify-between">
                         <div className="flex items-center gap-1.5 font-mono-tag text-[9px] uppercase tracking-widest text-muted-foreground">
                           <MapPin className="h-3 w-3 text-primary" />
-                          {booth.localizacao}, {booth.estado}
+                          {booth.localizacao ?? ""}, {booth.estado ?? ""}
                         </div>
                         {booth.avgRating && booth.avgRating > 0 ? (
                           <div className="flex items-center gap-1.5 font-mono-tag text-[9px] uppercase tracking-widest text-gold">
                             <Star className="h-3 w-3 fill-current" />
-                            {booth.avgRating.toFixed(1)}
+                            {(booth.avgRating ?? 0).toFixed(1)}
                           </div>
                         ) : (
                           <span className="font-mono-tag text-[8px] uppercase tracking-tighter text-muted-foreground/40">Nova na feira</span>

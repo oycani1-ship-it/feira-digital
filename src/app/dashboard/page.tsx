@@ -51,10 +51,10 @@ export default function DashboardHome() {
       if (boothSnap.exists()) {
         const data = boothSnap.data();
         boothData = {
-          views: data.views || 0,
-          averageRating: data.averageRating || 0,
-          totalRatings: data.totalRatings || 0,
-          whatsappClicks: data.whatsappClicks || 0
+          views: data.views ?? 0,
+          averageRating: data.averageRating ?? 0,
+          totalRatings: data.totalRatings ?? 0,
+          whatsappClicks: data.whatsappClicks ?? 0
         };
       }
 
@@ -122,10 +122,10 @@ export default function DashboardHome() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: t('dashboard.home.stats.views'), val: stats.views, icon: Eye, desc: t('dashboard.home.stats.viewsDesc') },
-          { label: t('dashboard.home.stats.products'), val: stats.products, icon: Package, desc: t('dashboard.home.stats.productsDesc') },
-          { label: t('dashboard.home.stats.rating'), val: stats.rating.toFixed(1), icon: Star, desc: t('dashboard.home.stats.ratingDesc').replace('{count}', stats.totalRatings.toString()) },
-          { label: t('dashboard.home.stats.clicks'), val: stats.clicks, icon: MessageCircle, desc: t('dashboard.home.stats.clicksDesc') },
+          { label: t('dashboard.home.stats.views'), val: stats.views ?? 0, icon: Eye, desc: t('dashboard.home.stats.viewsDesc') },
+          { label: t('dashboard.home.stats.products'), val: stats.products ?? 0, icon: Package, desc: t('dashboard.home.stats.productsDesc') },
+          { label: t('dashboard.home.stats.rating'), val: (stats.rating ?? 0).toFixed(1), icon: Star, desc: t('dashboard.home.stats.ratingDesc').replace('{count}', (stats.totalRatings ?? 0).toString()) },
+          { label: t('dashboard.home.stats.clicks'), val: stats.clicks ?? 0, icon: MessageCircle, desc: t('dashboard.home.stats.clicksDesc') },
         ].map((stat, i) => (
           <motion.div
             key={i}
