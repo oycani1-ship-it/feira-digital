@@ -40,8 +40,18 @@ interface Booth {
   isActive?: boolean;
 }
 
+interface SafeArtisanImageProps {
+  src?: string;
+  alt: string;
+  fill?: boolean;
+  width?: number;
+  height?: number;
+  className?: string;
+  sizes?: string;
+}
+
 // Componente utilitário para renderizar imagens com fallback
-function SafeArtisanImage({ src, alt, fill, className, sizes }: { src?: string, alt: string, fill?: boolean, className?: string, sizes?: string }) {
+function SafeArtisanImage({ src, alt, fill, width, height, className, sizes }: SafeArtisanImageProps) {
   const [error, setError] = useState(false);
 
   if (!src || error) {
@@ -57,6 +67,8 @@ function SafeArtisanImage({ src, alt, fill, className, sizes }: { src?: string, 
       src={src} 
       alt={alt} 
       fill={fill} 
+      width={!fill ? width : undefined}
+      height={!fill ? height : undefined}
       className={className} 
       sizes={sizes}
       onError={() => setError(true)}
