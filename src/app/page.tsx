@@ -22,7 +22,6 @@ export default function Home() {
   
   const { scrollYProgress } = useScroll({
     target: isReady ? (heroRef as any) : undefined,
-    offset: ["start start", "end start"],
     layoutEffect: false,
   });
 
@@ -133,7 +132,9 @@ export default function Home() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
                     />
                   </div>
-                  <h3 className="font-display text-2xl mb-2">Obra No. 0{i}</h3>
+                  <h3 className="font-display text-2xl mb-2">
+                    {i === 1 ? "BARRACA ZÉ" : `Obra No. 0${i}`}
+                  </h3>
                   <div className="flex justify-between items-end">
                     <span className="font-mono-tag text-[10px] uppercase tracking-widest text-muted-foreground">Coleção Limitada</span>
                     <PriceTag price={450 + i * 100} artisan="Mestre Pedro" />
