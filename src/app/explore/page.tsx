@@ -1,403 +1,213 @@
 "use client";
-
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { useEffect, useState, useCallback } from "react";
+import { collection, getDocs, query, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Star, X, Store as StoreIcon, Loader2, SlidersHorizontal } from "lucide-react";
-import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
-import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { db, auth } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  startAfter, 
-  QueryDocumentSnapshot,
-  DocumentData
-} from "firebase/firestore";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Store, Search, X, Loader2 } from "lucide-react";
+import Image from "next/image";
+
+const CATEGORIAS = [
+  "Alimentação","Acessórios","Bijouterias e Joias","Bolsas e Couros",
+  "Brinquedos e Bonecas","Cama/Mesa/Banho","Cerâmicas","Confecção Feminina",
+  "Confecção Infantil","Decoração","Doces e Salgados","Fantasias",
+  "Moda Artesanal","Móveis e Puffs","Quadros e Molduras","Roupas",
+  "Sapatos e Calçados","Tapetes e Redes","Velas Decorativas","Outros"
+];
+
+const ESTADOS = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
+  "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC",
+  "SP","SE","TO"
+];
 
 interface Booth {
   id: string;
-  name: string;
-  shortDescription?: string;
+  nome?: string;
+  name?: string;
+  bio?: string;
   description?: string;
-  category: string;
-  city: string;
-  state: string;
-  averageRating?: number;
-  totalRatings?: number;
-  coverImageUrl?: string;
+  shortDescription?: string;
+  categoria?: string;
+  category?: string;
+  localizacao?: string;
+  city?: string;
+  state?: string;
   logoUrl?: string;
-  nameNormalizado?: string;
+  capaUrl?: string;
+  coverImageUrl?: string;
+  isActive?: boolean;
+  sellerId?: string;
 }
 
-const PAGE_SIZE = 9;
-
-const normalizarParaBusca = (str: string) => {
-  return (str || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-};
-
 export default function ExplorePage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("categoria") || "all");
-  const [selectedState, setSelectedState] = useState(searchParams.get("estado") || "all");
-  
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMoreLoading, setIsMoreLoading] = useState(false);
   const [booths, setBooths] = useState<Booth[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  
-  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [filtered, setFiltered] = useState<Booth[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
+  const [estadoFiltro, setEstadoFiltro] = useState("Brasil inteiro");
 
-  // 1. PADRÃO: AGUARDA AUTENTICAÇÃO SER CONFIRMADA
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setAuthLoading(false);
-    });
-    return () => unsub();
+    async function fetchAll() {
+      setLoading(true);
+      try {
+        const q = query(collection(db, "booths"), limit(100));
+        const snap = await getDocs(q);
+        const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Booth));
+        
+        // Filtra no cliente: mostra tudo exceto isActive explicitamente false
+        // Isso ajuda a mostrar barracas que ainda não tem o campo isActive
+        const ativas = data.filter(b => b.isActive !== false);
+        setBooths(ativas);
+        setFiltered(ativas);
+      } catch (err) {
+        console.error("Erro ao buscar barracas:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAll();
   }, []);
 
-  const updateURL = useCallback((search: string, category: string, state: string) => {
-    const params = new URLSearchParams();
-    if (search) params.set("q", search);
-    if (category !== "all") params.set("categoria", category);
-    if (state !== "all") params.set("estado", state);
-    
-    const queryString = params.toString();
-    router.replace(`/explore${queryString ? `?${queryString}` : ""}`, { scroll: false });
-  }, [router]);
-
-  const fetchBooths = useCallback(async (search: string, category: string, state: string, append = false) => {
-    if (append) setIsMoreLoading(true);
-    else {
-      setIsLoading(true);
-      setBooths([]);
-      lastDocRef.current = null;
-    }
-
-    try {
-      const boothsRef = collection(db, "booths");
-      let q;
-
-      const normalizedSearch = normalizarParaBusca(search);
-
-      if (normalizedSearch) {
-        q = query(
-          boothsRef,
-          where("nameNormalizado", ">=", normalizedSearch),
-          where("nameNormalizado", "<=", normalizedSearch + "\uf8ff"),
-          orderBy("nameNormalizado"),
-          limit(PAGE_SIZE)
-        );
-      } else {
-        q = query(
-          boothsRef,
-          orderBy("updatedAt", "desc"),
-          limit(PAGE_SIZE)
-        );
-      }
-
-      if (append && lastDocRef.current) {
-        q = query(q, startAfter(lastDocRef.current));
-      }
-
-      const querySnapshot = await getDocs(q);
-      const fetchedDocs = querySnapshot.docs;
-      
-      let results: Booth[] = fetchedDocs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Booth));
-
-      if (category !== "all") {
-        results = results.filter(b => b.category === category);
-      }
-      if (state !== "all") {
-        results = results.filter(b => b.state === state);
-      }
-
-      setBooths(prev => append ? [...prev, ...results] : results);
-      lastDocRef.current = fetchedDocs.length > 0 ? fetchedDocs[fetchedDocs.length - 1] : null;
-      setHasMore(fetchedDocs.length === PAGE_SIZE);
-
-    } catch (error) {
-      console.error("Erro ao buscar barracas:", error);
-    } finally {
-      setIsLoading(false);
-      setIsMoreLoading(false);
-    }
-  }, []);
-
-  // 2. SÓ BUSCA QUANDO authLoading === false
   useEffect(() => {
-    if (authLoading) return;
-
-    const delayDebounceFn = setTimeout(() => {
-      fetchBooths(searchTerm, selectedCategory, selectedState);
-      updateURL(searchTerm, selectedCategory, selectedState);
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, selectedCategory, selectedState, fetchBooths, updateURL, authLoading]);
-
-  const handleLoadMore = () => {
-    if (!isMoreLoading && hasMore) {
-      fetchBooths(searchTerm, selectedCategory, selectedState, true);
+    let result = [...booths];
+    if (search.trim()) {
+      const s = search.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      result = result.filter(b => {
+        const nomeBooth = (b.nome || b.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const catBooth = (b.categoria || b.category || "").toLowerCase();
+        return nomeBooth.includes(s) || catBooth.includes(s);
+      });
     }
-  };
+    if (categoriaFiltro && categoriaFiltro !== "todas") {
+      result = result.filter(b => (b.categoria || b.category || "") === categoriaFiltro);
+    }
+    if (estadoFiltro && estadoFiltro !== "Brasil inteiro") {
+      result = result.filter(b => {
+        const loc = (b.localizacao || b.state || "").toLowerCase();
+        return loc.includes(estadoFiltro.toLowerCase());
+      });
+    }
+    setFiltered(result);
+  }, [search, categoriaFiltro, estadoFiltro, booths]);
 
-  const clearFilters = () => {
-    setSelectedCategory("all");
-    setSelectedState("all");
-    setSearchTerm("");
-  };
-
-  const removeFilter = (type: 'q' | 'cat' | 'state') => {
-    if (type === 'q') setSearchTerm("");
-    if (type === 'cat') setSelectedCategory("all");
-    if (type === 'state') setSelectedState("all");
-  };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      </div>
-    );
+  function limparFiltros() {
+    setSearch("");
+    setCategoriaFiltro("todas");
+    setEstadoFiltro("Brasil inteiro");
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-          <div>
-            <h1 className="font-headline text-4xl font-bold mb-2">Explorar Feira</h1>
-            <p className="text-muted-foreground">Artesanato autêntico direto de quem faz.</p>
+    <main className="min-h-screen bg-background p-4 md:p-8">
+      <div className="container mx-auto max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2 font-headline">Explorar Feira</h1>
+          <p className="text-muted-foreground">Artesanato autêntico direto de quem faz.</p>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9 h-12 rounded-full border-none shadow-sm"
+              placeholder="Nome da barraca ou categoria..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
-          <div className="w-full md:w-auto flex items-center gap-2">
-            <div className="relative flex-1 md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Nome da barraca..." 
-                className="pl-10 h-12 bg-white rounded-full border-none shadow-sm focus-visible:ring-primary"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+          <div className="flex gap-2">
+            <Select value={estadoFiltro} onValueChange={setEstadoFiltro}>
+              <SelectTrigger className="w-40 h-12 rounded-full bg-white border-none shadow-sm">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Brasil inteiro">Brasil inteiro</SelectItem>
+                {ESTADOS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
+              <SelectTrigger className="w-52 h-12 rounded-full bg-white border-none shadow-sm">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as categorias</SelectItem>
+                {CATEGORIAS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {(search || categoriaFiltro !== "todas" || estadoFiltro !== "Brasil inteiro") && (
+              <Button variant="ghost" onClick={limparFiltros} className="h-12 rounded-full">
+                <X className="h-4 w-4 mr-1" /> Limpar
+              </Button>
+            )}
           </div>
         </div>
 
-        {(selectedCategory !== "all" || selectedState !== "all" || searchTerm) && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {searchTerm && (
-              <Badge variant="secondary" className="px-3 py-1 bg-primary/10 text-primary border-none gap-2">
-                Busca: {searchTerm} <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter('q')} />
-              </Badge>
-            )}
-            {selectedCategory !== "all" && (
-              <Badge variant="secondary" className="px-3 py-1 bg-primary/10 text-primary border-none gap-2">
-                {selectedCategory} <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter('cat')} />
-              </Badge>
-            )}
-            {selectedState !== "all" && (
-              <Badge variant="secondary" className="px-3 py-1 bg-primary/10 text-primary border-none gap-2">
-                Estado: {selectedState} <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter('state')} />
-              </Badge>
-            )}
-            <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={clearFilters}>
-              Limpar tudo
-            </Button>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-80 rounded-[2rem] bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-24 bg-muted/20 rounded-[2.5rem] border-2 border-dashed flex flex-col items-center">
+            <Store className="h-16 w-16 text-muted-foreground/20 mb-6" />
+            <h3 className="text-2xl font-bold mb-2">Nenhuma barraca encontrada</h3>
+            <p className="text-muted-foreground mb-8 max-w-xs mx-auto">Tente ajustar seus filtros ou busca para encontrar artesãos.</p>
+            <Button onClick={limparFiltros} className="rounded-full px-8">Limpar todos os filtros</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filtered.map(booth => (
+              <Link key={booth.id} href={`/barraca/${booth.id}`}>
+                <Card className="group overflow-hidden border-none shadow-md hover:shadow-xl transition-smooth hover:-translate-y-1 h-full flex flex-col rounded-[2rem] bg-white">
+                  <div className="relative h-48 bg-muted shrink-0">
+                    {(booth.capaUrl || booth.coverImageUrl) && (
+                      <Image 
+                        src={booth.capaUrl || booth.coverImageUrl || ""} 
+                        alt={booth.nome || booth.name || "Barraca"} 
+                        fill 
+                        className="object-cover transition-smooth group-hover:scale-105"
+                      />
+                    )}
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-white/95 text-primary border-none font-bold backdrop-blur-sm">
+                        {booth.categoria || booth.category || "Artesanato"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-6 pt-10 relative flex-1 flex flex-col">
+                    <div className="absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white overflow-hidden shadow-lg bg-white">
+                      {booth.logoUrl ? (
+                        <Image src={booth.logoUrl} alt="Logo" fill className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted/50 text-muted-foreground">
+                          <Store className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+                    <h2 className="font-headline text-2xl font-bold mb-2 group-hover:text-primary transition-colors">
+                      {booth.nome || booth.name || "Barraca Sem Nome"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
+                      {booth.bio || booth.description || booth.shortDescription || "Conheça nossa arte artesanal única."}
+                    </p>
+                    {(booth.localizacao || booth.state || booth.city) && (
+                      <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground border-t pt-4 mt-auto">
+                        <span className="flex items-center gap-1">📍 {booth.city}{booth.city && (booth.localizacao || booth.state) ? ', ' : ''}{booth.localizacao || booth.state}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
           </div>
         )}
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="hidden lg:block w-72 space-y-8">
-            <div className="sticky top-24 bg-white p-6 rounded-3xl border shadow-sm">
-              <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4" /> Filtros
-              </h3>
-              
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Estado</label>
-                  <Select value={selectedState} onValueChange={setSelectedState}>
-                    <SelectTrigger className="bg-muted/30 border-none">
-                      <SelectValue placeholder="Brasil inteiro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Brasil inteiro</SelectItem>
-                      {BRAZILIAN_STATES.map(state => (
-                        <SelectItem key={state} value={state}>{state}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Categorias</label>
-                  <div className="flex flex-col gap-1">
-                    <button 
-                      onClick={() => setSelectedCategory("all")}
-                      className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCategory === "all" ? "bg-primary text-white font-bold" : "hover:bg-muted"}`}
-                    >
-                      Todas as categorias
-                    </button>
-                    {CATEGORIES.map(cat => (
-                      <button 
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat)}
-                        className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCategory === cat ? "bg-primary text-white font-bold" : "hover:bg-muted"}`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          <div className="lg:hidden mb-6">
-             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full bg-white border-none shadow-sm">
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                   <SelectItem value="all">Todas as categorias</SelectItem>
-                   {CATEGORIES.map(cat => (
-                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                   ))}
-                </SelectContent>
-             </Select>
-          </div>
-
-          <div className="flex-1">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="space-y-4">
-                    <Skeleton className="h-56 w-full rounded-3xl" />
-                    <Skeleton className="h-6 w-3/4 rounded-full" />
-                    <Skeleton className="h-4 w-1/2 rounded-full" />
-                  </div>
-                ))}
-              </div>
-            ) : booths.length > 0 ? (
-              <div className="space-y-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {booths.map(booth => (
-                    <Link key={booth.id} href={`/barraca/${booth.id}`}>
-                      <Card className="group overflow-hidden border-none shadow-sm transition-smooth hover:shadow-xl hover:-translate-y-1 h-full flex flex-col bg-white">
-                        <div className="relative h-56 bg-muted shrink-0">
-                          {booth.coverImageUrl ? (
-                             <Image 
-                              src={booth.coverImageUrl} 
-                              alt={booth.name} 
-                              fill 
-                              className="object-cover transition-smooth group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <StoreIcon className="h-12 w-12 text-muted-foreground/20" />
-                            </div>
-                          )}
-                          <div className="absolute top-4 right-4">
-                            <Badge className="bg-white/95 text-primary border-none font-bold backdrop-blur-sm">{booth.category}</Badge>
-                          </div>
-                        </div>
-                        <CardContent className="p-5 pt-8 relative flex-1 flex flex-col">
-                          <div className="absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white overflow-hidden shadow-lg bg-white">
-                            {booth.logoUrl ? (
-                              <Image src={booth.logoUrl} alt={booth.name} fill className="object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-muted/50">
-                                <StoreIcon className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                          <h3 className="font-headline text-2xl font-bold mb-2 group-hover:text-primary transition-colors">{booth.name}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
-                            {booth.shortDescription || booth.description || "Conheça nossa arte artesanal."}
-                          </p>
-                          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground mt-auto pt-4 border-t">
-                            <span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-primary" /> {booth.city}, {booth.state}</span>
-                            <span className="flex items-center gap-1">
-                              <Star className={`h-3 w-3 ${booth.averageRating ? "text-amber-500 fill-amber-500" : "text-muted-foreground"}`} /> 
-                              {booth.averageRating ? booth.averageRating.toFixed(1) : "N/A"} 
-                              {booth.totalRatings ? <span className="font-normal">({booth.totalRatings})</span> : null}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-                
-                {hasMore && (
-                  <div className="flex justify-center pb-8">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleLoadMore} 
-                      disabled={isMoreLoading}
-                      className="min-w-[200px] rounded-full h-12"
-                    >
-                      {isMoreLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Carregando...
-                        </>
-                      ) : (
-                        "Ver mais barracas"
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-24 bg-muted/20 rounded-[2.5rem] border-2 border-dashed flex flex-col items-center">
-                <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-6">
-                  <StoreIcon className="h-10 w-10 text-muted-foreground/30" />
-                </div>
-                <h3 className="text-2xl font-bold mb-2">Nenhuma barraca encontrada</h3>
-                <p className="text-muted-foreground mb-8 max-w-xs mx-auto">Tente ajustar seus filtros ou termos de busca para encontrar artesãos.</p>
-                <Button onClick={clearFilters} className="rounded-full px-8">Limpar todos os filtros</Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 }

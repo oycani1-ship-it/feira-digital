@@ -16,7 +16,7 @@ import { Loader2, Store, Camera, Save, Instagram, MessageSquare } from "lucide-r
 import Image from "next/image";
 
 const normalizarParaBusca = (str: string) => {
-  return str
+  return (str || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -69,17 +69,17 @@ export default function BoothSettingsPage() {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setFormData({
-          name: data.name || "",
+          name: data.name || data.nome || "",
           sellerName: data.sellerName || auth.currentUser?.displayName || "",
-          description: data.description || "",
-          category: data.category || "",
-          city: data.city || "",
+          description: data.description || data.bio || "",
+          category: data.category || data.categoria || "",
+          city: data.city || data.localizacao || "",
           state: data.state || "",
           whatsapp: data.whatsapp || "",
           instagram: data.instagram || "",
           website: data.website || "",
           logoUrl: data.logoUrl || "",
-          coverImageUrl: data.coverImageUrl || ""
+          coverImageUrl: data.coverImageUrl || data.capaUrl || ""
         });
       } else {
         setFormData(prev => ({ ...prev, sellerName: auth.currentUser?.displayName || "" }));
@@ -128,7 +128,7 @@ export default function BoothSettingsPage() {
         coverImageUrl = await getDownloadURL(coverRef);
       }
 
-      // USO DE setDoc COM merge: true E sellerId GARANTIDO
+      // GARANTE sellerId, isActive E nameNormalizado
       await setDoc(doc(db, "booths", userId), {
         ...formData,
         sellerId: userId,
@@ -137,7 +137,7 @@ export default function BoothSettingsPage() {
         categoriaNormalizada: normalizarParaBusca(formData.category),
         logoUrl,
         coverImageUrl,
-        isActive: true,
+        isActive: true, // CRÍTICO: Garante que a barraca apareça no explore
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
@@ -268,7 +268,7 @@ export default function BoothSettingsPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="city">Cidade</Label>
+            <Label htmlFor="city">Cidade/Localização</Label>
             <Input 
               id="city" 
               placeholder="Ex: São Paulo" 
