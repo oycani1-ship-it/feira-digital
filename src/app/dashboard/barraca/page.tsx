@@ -1,385 +1,365 @@
-
 "use client";
-
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged, User } from "firebase/auth";
+import {
+  doc, getDoc, setDoc, serverTimestamp,
+} from "firebase/firestore";
+import {
+  ref, uploadBytes, getDownloadURL,
+} from "firebase/storage";
 import { auth, db, storage } from "@/lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
+import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Store, Camera, Save, Instagram, MessageSquare, AlertCircle } from "lucide-react";
-import Image from "next/image";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Upload, Camera, Store } from "lucide-react";
+import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
 
-const normalizarParaBusca = (str: string) => {
-  return (str || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-};
-
-export default function BoothSettingsPage() {
+export default function MinhaBarracaPage() {
+  const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
-  
-  const [formData, setFormData] = useState({
-    name: "",
-    sellerName: "",
-    description: "",
-    category: "",
-    city: "",
-    state: "",
-    whatsapp: "",
-    instagram: "",
-    website: "",
-    logoUrl: "",
-    coverImageUrl: ""
-  });
 
-  const [files, setFiles] = useState<{
-    logo: File | null;
-    cover: File | null;
-  }>({ logo: null, cover: null });
+  const [user, setUser]           = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [error, setError]         = useState("");
 
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  // Campos do formulário
+  const [nome, setNome]           = useState("");
+  const [bio, setBio]             = useState("");
+  const [categoria, setCategoria] = useState("");
+  const [localizacao, setLocalizacao] = useState("");
+  const [estado, setEstado]       = useState("");
+  const [whatsapp, setWhatsapp]   = useState("");
+  const [instagram, setInstagram] = useState("");
 
+  // Imagens — URL já salva
+  const [logoUrl, setLogoUrl]     = useState("");
+  const [capaUrl, setCapaUrl]     = useState("");
+
+  // Imagens — arquivo novo selecionado pelo usuário
+  const [logoFile, setLogoFile]   = useState<File | null>(null);
+  const [capaFile, setCapaFile]   = useState<File | null>(null);
+
+  // Preview local
+  const [logoPreview, setLogoPreview] = useState("");
+  const [capaPreview, setCapaPreview] = useState("");
+
+  // ── Auth listener ──────────────────────────────────────────────
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-        fetchBoothData(user.uid);
+    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        router.push("/login");
+        return;
       }
+      setUser(firebaseUser);
+      setAuthReady(true);
     });
-    return () => unsubscribe();
-  }, []);
+    return () => unsub();
+  }, [router]);
 
-  const fetchBoothData = async (uid: string) => {
-    try {
-      const docRef = doc(db, "booths", uid);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setFormData({
-          name: data.name || data.nome || "",
-          sellerName: data.sellerName || auth.currentUser?.displayName || "",
-          description: data.description || data.bio || "",
-          category: data.category || data.categoria || "",
-          city: data.city || data.localizacao || "",
-          state: data.state || "",
-          whatsapp: data.whatsapp || "",
-          instagram: data.instagram || "",
-          website: data.website || "",
-          logoUrl: data.logoUrl || "",
-          coverImageUrl: data.coverImageUrl || data.capaUrl || ""
-        });
-      } else {
-        setFormData(prev => ({ ...prev, sellerName: auth.currentUser?.displayName || "" }));
+  // ── Carregar dados existentes da barraca ────────────────────────
+  useEffect(() => {
+    if (!authReady || !user) return;
+
+    async function loadBooth() {
+      setIsFetching(true);
+      try {
+        const snap = await getDoc(doc(db, "booths", user!.uid));
+        if (snap.exists()) {
+          const d = snap.data();
+          setNome(d.nome || d.name || "");
+          setBio(d.bio || d.description || "");
+          setCategoria(d.categoria || d.category || "");
+          setLocalizacao(d.localizacao || d.city || "");
+          setEstado(d.estado || d.state || "");
+          setWhatsapp(d.whatsapp || "");
+          setInstagram(d.instagram || "");
+          setLogoUrl(d.logoUrl || "");
+          setCapaUrl(d.capaUrl || d.coverImageUrl || "");
+          setLogoPreview(d.logoUrl || "");
+          setCapaPreview(d.capaUrl || d.coverImageUrl || "");
+        }
+      } catch (err) {
+        console.error("Erro ao carregar barraca:", err);
+      } finally {
+        setIsFetching(false);
       }
-    } catch (error) {
-      console.error("Erro ao carregar dados da barraca:", error);
+    }
+
+    loadBooth();
+  }, [authReady, user]);
+
+  // ── Seleção de imagens ─────────────────────────────────────────
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
+
+  function handleCapaChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCapaFile(file);
+    setCapaPreview(URL.createObjectURL(file));
+  }
+
+  // ── Submit ─────────────────────────────────────────────────────
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Upload de logo (só se novo arquivo selecionado)
+      let finalLogoUrl = logoUrl;
+      if (logoFile instanceof File) {
+        const r = ref(storage, `booths/${user.uid}/logo_${Date.now()}`);
+        const snap = await uploadBytes(r, logoFile);
+        finalLogoUrl = await getDownloadURL(snap.ref);
+      }
+
+      // Upload de capa (só se novo arquivo selecionado)
+      let finalCapaUrl = capaUrl;
+      if (capaFile instanceof File) {
+        const r = ref(storage, `booths/${user.uid}/capa_${Date.now()}`);
+        const snap = await uploadBytes(r, capaFile);
+        finalCapaUrl = await getDownloadURL(snap.ref);
+      }
+
+      const boothRef  = doc(db, "booths", user.uid);
+      const existing  = await getDoc(boothRef);
+
+      const normalizar = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      // Campos que sempre atualizamos
+      const payload: Record<string, any> = {
+        sellerId:     user.uid,
+        sellerEmail:  user.email || "",
+        nome:         nome.trim(),
+        name:         nome.trim(), // Compatibilidade com versões que usam 'name'
+        bio:          bio.trim(),
+        description:  bio.trim(), // Compatibilidade com versões que usam 'description'
+        categoria:    categoria,
+        category:     categoria,    // Compatibilidade
+        localizacao:  localizacao.trim(),
+        city:         localizacao.trim(), // Compatibilidade
+        estado:       estado,
+        state:        estado,      // Compatibilidade
+        whatsapp:     whatsapp.trim(),
+        instagram:    instagram.trim(),
+        logoUrl:      finalLogoUrl,
+        capaUrl:      finalCapaUrl,
+        coverImageUrl: finalCapaUrl, // Compatibilidade
+        isActive:     true,
+        updatedAt:    serverTimestamp(),
+        nomeNormalizado: normalizar(nome.trim()),
+        categoriaNormalizada: normalizar(categoria),
+      };
+
+      // Campos inicializados APENAS na criação
+      if (!existing.exists()) {
+        payload.createdAt      = serverTimestamp();
+        payload.views          = 0;
+        payload.whatsappClicks = 0;
+        payload.avgRating      = 0;
+        payload.averageRating  = 0; // Compatibilidade
+        payload.totalRatings   = 0;
+      }
+
+      await setDoc(boothRef, payload, { merge: true });
+
+      toast({
+        title: "Barraca salva com sucesso! 🎉",
+        description: "Seu perfil público foi atualizado.",
+      });
+
+      // Limpa arquivos temporários após salvar
+      setLogoFile(null);
+      setCapaFile(null);
+
+    } catch (err: any) {
+      console.error("Erro ao salvar barraca:", err);
+      const msg = err instanceof Error ? err.message : "Erro desconhecido";
+      setError(`Erro ao salvar: ${msg}`);
+      toast({ title: "Erro ao salvar", description: msg, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setFiles(prev => ({ ...prev, [type]: file }));
-    
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ 
-        ...prev, 
-        [type === 'logo' ? 'logoUrl' : 'coverImageUrl']: reader.result as string 
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    if (!user) return;
-
-    setIsSaving(true);
-    setError("");
-
-    try {
-      let finalLogoUrl = formData.logoUrl;
-      let finalCoverUrl = formData.coverImageUrl;
-
-      // Upload logo — SÓ se for um File novo
-      if (files.logo instanceof File) {
-        const logoRef = ref(storage, `booths/${user.uid}/logo_${Date.now()}`);
-        const snap = await uploadBytes(logoRef, files.logo);
-        finalLogoUrl = await getDownloadURL(snap.ref);
-      }
-
-      // Upload capa — SÓ se for um File novo
-      if (files.cover instanceof File) {
-        const coverRef = ref(storage, `booths/${user.uid}/cover_${Date.now()}`);
-        const snap = await uploadBytes(coverRef, files.cover);
-        finalCoverUrl = await getDownloadURL(snap.ref);
-      }
-
-      const boothRef = doc(db, "booths", user.uid);
-      const existing = await getDoc(boothRef);
-
-      const payload: Record<string, any> = {
-        sellerId: user.uid,
-        sellerEmail: user.email || "",
-        name: formData.name.trim(),
-        sellerName: formData.sellerName.trim(),
-        description: formData.description.trim(),
-        category: formData.category,
-        city: formData.city.trim(),
-        state: formData.state,
-        whatsapp: formData.whatsapp.trim(),
-        instagram: formData.instagram.trim(),
-        website: formData.website.trim(),
-        logoUrl: finalLogoUrl || "",
-        coverImageUrl: finalCoverUrl || "",
-        nameNormalizado: normalizarParaBusca(formData.name),
-        categoriaNormalizada: normalizarParaBusca(formData.category),
-        isActive: true,
-        updatedAt: serverTimestamp(),
-      };
-
-      // Inicializa metadados apenas se for uma barraca nova
-      if (!existing.exists()) {
-        payload.createdAt = serverTimestamp();
-        payload.views = 0;
-        payload.whatsappClicks = 0;
-        payload.averageRating = 0;
-        payload.totalRatings = 0;
-      }
-
-      await setDoc(boothRef, payload, { merge: true });
-
-      toast({ 
-        title: "Barraca salva com sucesso!", 
-        description: "As informações da sua barraca foram atualizadas." 
-      });
-    } catch (err: any) {
-      console.error("Erro ao salvar barraca:", err);
-      const msg = err instanceof Error ? err.message : "Erro desconhecido";
-      setError(`Erro ao salvar: ${msg}`);
-      toast({ 
-        variant: "destructive", 
-        title: "Erro ao salvar", 
-        description: "Verifique suas permissões e tente novamente." 
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (isLoading) {
+  if (!authReady || isFetching) {
     return (
-      <div className="h-64 flex flex-col items-center justify-center space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Carregando perfil da barraca...</p>
+        <p className="text-muted-foreground animate-pulse">Carregando configurações da barraca...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-headline text-3xl font-bold">Minha Barraca</h1>
-          <p className="text-muted-foreground">Configure como os clientes verão sua loja virtual.</p>
-        </div>
+    <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div>
+        <h1 className="font-headline text-3xl font-bold">Minha Barraca</h1>
+        <p className="text-muted-foreground">Personalize como sua marca será vista pelos clientes.</p>
       </div>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8 pb-12">
+        {/* Identidade Visual */}
         <div className="space-y-4">
           <Label className="text-lg font-bold">Identidade Visual</Label>
+          
+          {/* Capa */}
           <div className="relative group">
-            <div className="relative h-48 w-full rounded-2xl overflow-hidden bg-muted border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
-              {formData.coverImageUrl ? (
-                <Image src={formData.coverImageUrl} alt="Capa" fill className="object-cover" />
+            <div 
+              className="relative h-48 w-full rounded-2xl overflow-hidden bg-muted border-2 border-dashed border-muted-foreground/20 flex items-center justify-center cursor-pointer transition-colors hover:bg-muted/50"
+              onClick={() => document.getElementById("capa-input")?.click()}
+            >
+              {capaPreview ? (
+                <img src={capaPreview} alt="Capa" className="w-full h-full object-cover" />
               ) : (
                 <div className="text-center text-muted-foreground">
                   <Camera className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                  <span className="text-xs">Foto de Capa</span>
+                  <span className="text-xs font-medium">Clique para enviar foto de capa</span>
                 </div>
               )}
-              <Button 
-                type="button" 
-                variant="secondary" 
-                size="sm" 
-                className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => coverInputRef.current?.click()}
-              >
-                Alterar Capa
-              </Button>
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Button type="button" variant="secondary" size="sm">Alterar Capa</Button>
+              </div>
             </div>
-            
+            <input id="capa-input" type="file" accept="image/*" className="hidden" onChange={handleCapaChange} />
+
+            {/* Logo */}
             <div className="absolute -bottom-6 left-8">
-              <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white bg-white shadow-lg group/logo">
-                {formData.logoUrl ? (
-                  <Image src={formData.logoUrl} alt="Logo" fill className="object-cover" />
+              <div 
+                className="relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white bg-white shadow-lg cursor-pointer group/logo"
+                onClick={() => document.getElementById("logo-input")?.click()}
+              >
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-muted">
                     <Store className="h-8 w-8 text-muted-foreground opacity-20" />
                   </div>
                 )}
-                <button 
-                  type="button"
-                  className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity text-white"
-                  onClick={() => logoInputRef.current?.click()}
-                >
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity text-white">
                   <Camera className="h-6 w-6" />
-                </button>
+                </div>
               </div>
+              <input id="logo-input" type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
             </div>
           </div>
-          <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'logo')} />
-          <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} />
-          <div className="pt-6" />
+          <div className="h-8" />
         </div>
 
+        {/* Informações Básicas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome da Barraca</Label>
-            <Input 
-              id="name" 
-              placeholder="Ex: Cerâmicas da Terra" 
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            <Label htmlFor="nome">Nome da Barraca *</Label>
+            <Input
+              id="nome"
+              value={nome}
+              onChange={e => setNome(e.target.value)}
+              placeholder="Ex: Cerâmicas da Terra"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="sellerName">Nome do Artesão</Label>
-            <Input 
-              id="sellerName" 
-              placeholder="Seu nome ou marca pessoal" 
-              value={formData.sellerName}
-              onChange={(e) => setFormData(prev => ({ ...prev, sellerName: e.target.value }))}
-              required
-            />
+            <Label>Categoria Principal</Label>
+            <Select value={categoria} onValueChange={setCategoria}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">História / Bio da Barraca</Label>
-          <Textarea 
-            id="description" 
-            placeholder="Conte um pouco sobre sua arte, materiais e inspirações..." 
+          <Label htmlFor="bio">História / Bio da Barraca</Label>
+          <Textarea
+            id="bio"
+            value={bio}
+            onChange={e => setBio(e.target.value)}
+            placeholder="Conte um pouco sobre sua arte, materiais e inspirações..."
             className="min-h-[120px]"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label>Categoria Principal</Label>
-            <Select 
-              value={formData.category} 
-              onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="city">Cidade/Localização</Label>
-            <Input 
-              id="city" 
-              placeholder="Ex: São Paulo" 
-              value={formData.city}
-              onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+            <Label htmlFor="localizacao">Cidade/Localização</Label>
+            <Input
+              id="localizacao"
+              value={localizacao}
+              onChange={e => setLocalizacao(e.target.value)}
+              placeholder="Ex: São Paulo"
             />
           </div>
           <div className="space-y-2">
             <Label>Estado</Label>
-            <Select 
-              value={formData.state} 
-              onValueChange={(val) => setFormData(prev => ({ ...prev, state: val }))}
-            >
+            <Select value={estado} onValueChange={setEstado}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-                {BRAZILIAN_STATES.map(state => (
-                  <SelectItem key={state} value={state}>{state}</SelectItem>
-                ))}
+                {BRAZILIAN_STATES.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <div className="space-y-4 pt-4">
-          <h3 className="font-bold text-lg border-b pb-2">Contatos e Links</h3>
+        {/* Contatos */}
+        <div className="space-y-4 pt-4 border-t">
+          <h3 className="font-bold text-lg">Contatos e Redes Sociais</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="whatsapp" className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-green-500" /> WhatsApp (com DDD)
-              </Label>
-              <Input 
-                id="whatsapp" 
-                placeholder="Ex: 11999999999" 
-                value={formData.whatsapp}
-                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
+              <Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
+              <Input
+                id="whatsapp"
+                value={whatsapp}
+                onChange={e => setWhatsapp(e.target.value)}
+                placeholder="Ex: 11999999999"
               />
+              <p className="text-[10px] text-muted-foreground">Usado para os clientes iniciarem conversas sobre produtos.</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="instagram" className="flex items-center gap-2">
-                <Instagram className="h-4 w-4 text-pink-500" /> Instagram (@usuario)
-              </Label>
-              <Input 
-                id="instagram" 
-                placeholder="Ex: minha_loja_artesanal" 
-                value={formData.instagram}
-                onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))}
+              <Label htmlFor="instagram">Instagram (@usuario)</Label>
+              <Input
+                id="instagram"
+                value={instagram}
+                onChange={e => setInstagram(e.target.value)}
+                placeholder="Ex: minha_loja_artesanal"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 pt-6 border-t">
-          <Button 
-            type="submit" 
-            size="lg" 
-            className="bg-primary hover:bg-primary/90 px-8"
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        {error && (
+          <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        <div className="flex justify-end pt-6 border-t">
+          <Button type="submit" size="lg" className="px-8 font-bold" disabled={isLoading}>
+            {isLoading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
             ) : (
-              <Save className="mr-2 h-4 w-4" />
+              "Salvar Perfil da Barraca"
             )}
-            Salvar Perfil da Barraca
           </Button>
         </div>
       </form>
