@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Search, ShoppingBag, User, Menu, X, LogOut, LayoutDashboard, Globe } from "lucide-react";
+import { Search, ShoppingBag, Globe, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/context/language-context";
-import { Language } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +22,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
   const { t, language, setLanguage } = useTranslation();
 
@@ -34,122 +32,91 @@ export function Navbar() {
     return () => unsubscribe();
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/explore?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
   const handleSignOut = async () => {
     await signOut(auth);
     router.push("/");
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <ShoppingBag className="h-6 w-6 text-primary" />
-            <span className="font-headline text-2xl font-bold text-primary tracking-tight">Feira Digital</span>
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+        <div className="flex items-center gap-12">
+          <Link href="/" className="flex items-center gap-2" data-cursor="stitch">
+            <ShoppingBag className="h-5 w-5 text-primary" />
+            <span className="font-display text-2xl font-bold text-foreground tracking-tight">FEIRA</span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/explore" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.explore')}</Link>
-            <Link href="/#como-funciona" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.howItWorks')}</Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/explore" className="font-mono-tag text-[10px] uppercase tracking-widest hover:text-primary transition-colors">{t('nav.explore')}</Link>
+            <Link href="/#como-funciona" className="font-mono-tag text-[10px] uppercase tracking-widest hover:text-primary transition-colors">{t('nav.howItWorks')}</Link>
           </div>
         </div>
 
-        <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-sm mx-8 relative">
-          <Input 
-            placeholder={t('nav.searchPlaceholder')}
-            className="pl-10 h-10 bg-muted/50 border-none focus-visible:ring-primary"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-        </form>
-
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Globe className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="rounded-full" data-cursor="stitch">
+                <Globe className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLanguage('pt-BR')} className={language === 'pt-BR' ? 'bg-muted' : ''}>Português (BR)</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('en-US')} className={language === 'en-US' ? 'bg-muted' : ''}>English (US)</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('es-ES')} className={language === 'es-ES' ? 'bg-muted' : ''}>Español (ES)</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="bg-card border-border">
+              <DropdownMenuItem onClick={() => setLanguage('pt-BR')} className="font-mono-tag text-[10px] uppercase">Português (BR)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('en-US')} className="font-mono-tag text-[10px] uppercase">English (US)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('es-ES')} className="font-mono-tag text-[10px] uppercase">Español (ES)</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full" data-cursor="stitch">
+                  <Avatar className="h-9 w-9 border border-border">
                     <AvatarImage src={user.photoURL || ""} alt={user.displayName || ""} />
-                    <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-muted text-xs font-mono-tag">{user.displayName?.charAt(0) || "U"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName || "Usuário"}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                  </div>
+              <DropdownMenuContent className="w-56 bg-card border-border" align="end">
+                <DropdownMenuLabel className="font-mono-tag text-[10px] uppercase px-3 py-2">
+                  {user.displayName || "Artesão"}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="cursor-pointer">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    <span>{t('nav.dashboard')}</span>
+                  <Link href="/dashboard" className="cursor-pointer font-mono-tag text-[10px] uppercase">
+                    <LayoutDashboard className="mr-2 h-3 w-3" />
+                    {t('nav.dashboard')}
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>{t('nav.logout')}</span>
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive font-mono-tag text-[10px] uppercase cursor-pointer">
+                  <LogOut className="mr-2 h-3 w-3" />
+                  {t('nav.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" asChild className="hidden sm:inline-flex">
-                <Link href="/login">{t('nav.login')}</Link>
-              </Button>
-              <Button asChild className="bg-primary hover:bg-primary/90">
-                <Link href="/register">{t('nav.createBooth')}</Link>
-              </Button>
+              <Link href="/login" className="hidden sm:inline-flex font-mono-tag text-[10px] uppercase px-4 hover:text-primary transition-colors">
+                {t('nav.login')}
+              </Link>
+              <Link href="/register" className="bg-primary text-primary-foreground font-mono-tag text-[10px] uppercase px-6 py-2 tracking-widest hover:brightness-110 transition-all">
+                {t('nav.createBooth')}
+              </Link>
             </div>
           )}
 
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
       {isOpen && (
-        <div className="md:hidden p-4 bg-background border-b animate-in slide-in-from-top-4">
-          <form onSubmit={handleSearch} className="relative mb-4">
-            <Input 
-              placeholder={t('nav.searchPlaceholder')}
-              className="pl-10 h-10 bg-muted/50"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-          </form>
-          <div className="flex flex-col gap-4">
-            <Link href="/explore" className="text-lg font-medium py-2" onClick={() => setIsOpen(false)}>{t('nav.explore')}</Link>
-            <Link href="/#como-funciona" className="text-lg font-medium py-2" onClick={() => setIsOpen(false)}>{t('nav.howItWorks')}</Link>
-            {!user && (
-              <Link href="/login" className="text-lg font-medium py-2 border-t pt-4" onClick={() => setIsOpen(false)}>{t('nav.login')}</Link>
-            )}
-          </div>
+        <div className="md:hidden p-8 bg-background border-b flex flex-col gap-6 animate-in slide-in-from-top-4">
+          <Link href="/explore" className="font-mono-tag text-[10px] uppercase tracking-widest" onClick={() => setIsOpen(false)}>{t('nav.explore')}</Link>
+          <Link href="/#como-funciona" className="font-mono-tag text-[10px] uppercase tracking-widest" onClick={() => setIsOpen(false)}>{t('nav.howItWorks')}</Link>
+          {!user && (
+            <Link href="/login" className="font-mono-tag text-[10px] uppercase tracking-widest border-t pt-6" onClick={() => setIsOpen(false)}>{t('nav.login')}</Link>
+          )}
         </div>
       )}
     </nav>
