@@ -18,9 +18,11 @@ export default function Home() {
   const { t } = useTranslation();
   const [isLoaded, setIsLoaded] = useState(false);
   const heroRef = useRef(null);
+  
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
+    layoutEffect: false, // Resolve o erro de hidratação quando o ref ainda não está pronto
   });
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
@@ -124,7 +126,7 @@ export default function Home() {
                       alt={`Item ${i}`}
                       fill
                       className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                      sizes="300px"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
                     />
                   </div>
                   <h3 className="font-display text-2xl mb-2">Obra No. 0{i}</h3>
