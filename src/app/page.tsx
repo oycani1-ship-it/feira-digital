@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -36,6 +37,7 @@ export default function Home() {
               src={heroImage?.imageUrl || "https://picsum.photos/seed/feira-hero/1200/600"} 
               alt="Feira de Artesanato"
               fill
+              sizes="100vw"
               className="object-cover brightness-[0.4]"
               priority
               data-ai-hint="artisan craft fair pottery"
@@ -86,6 +88,7 @@ export default function Home() {
                         src={`https://picsum.photos/seed/cat-${i}/200/200`}
                         alt={cat}
                         fill
+                        sizes="80px"
                         className="object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                        />
                     </div>
@@ -132,10 +135,24 @@ export default function Home() {
               </div>
               <div className="lg:w-1/2 relative h-[500px] w-full">
                 <div className="absolute top-0 right-0 w-4/5 h-4/5 rounded-2xl overflow-hidden shadow-2xl">
-                  <Image src="https://picsum.photos/seed/artisan-working/600/600" fill className="object-cover" alt="Artesão trabalhando" data-ai-hint="artisan working" />
+                  <Image 
+                    src="https://picsum.photos/seed/artisan-working/600/600" 
+                    fill 
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover" 
+                    alt="Artesão trabalhando" 
+                    data-ai-hint="artisan working" 
+                  />
                 </div>
                 <div className="absolute bottom-0 left-0 w-3/5 h-3/5 rounded-2xl border-8 border-white overflow-hidden shadow-2xl">
-                  <Image src="https://picsum.photos/seed/product-detail/600/600" fill className="object-cover" alt="Produto artesanal" data-ai-hint="craft product" />
+                  <Image 
+                    src="https://picsum.photos/seed/product-detail/600/600" 
+                    fill 
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    className="object-cover" 
+                    alt="Produto artesanal" 
+                    data-ai-hint="craft product" 
+                  />
                 </div>
               </div>
             </div>
@@ -151,7 +168,7 @@ export default function Home() {
                   <Store className="h-8 w-8 text-secondary" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Autenticidade</h3>
-                <p className="text-muted-foreground">Cada barraca é um mundo único, com histórias reais por trás de cada criação.</p>
+                <p className="text-muted-foreground">Cada barraca é um world único, com histórias reais por trás de cada criação.</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">

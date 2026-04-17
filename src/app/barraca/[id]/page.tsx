@@ -70,7 +70,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         if (boothSnap.exists()) {
           setBooth({ id: boothSnap.id, ...boothSnap.data() } as Booth);
           
-          // Incrementa visualização da barraca
           await updateDoc(boothRef, {
             views: increment(1)
           });
@@ -88,7 +87,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         });
         setProducts(fetchedProducts);
 
-        // Verifica se o usuário já avaliou
         if (auth.currentUser) {
           const ratingId = `${auth.currentUser.uid}_${id}`;
           const ratingSnap = await getDoc(doc(db, "ratings", ratingId));
@@ -110,7 +108,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
     if (!booth) return;
     
     try {
-      // Incrementa cliques no WhatsApp para métricas
       const boothRef = doc(db, "booths", id);
       await updateDoc(boothRef, {
         whatsappClicks: increment(1)
@@ -160,11 +157,9 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         let sumRatings = (bData.averageRating || 0) * totalRatings;
 
         if (existingRatingDoc.exists()) {
-          // Atualiza avaliação existente
           const oldVal = existingRatingDoc.data().value;
           sumRatings = sumRatings - oldVal + value;
         } else {
-          // Nova avaliação
           totalRatings += 1;
           sumRatings += value;
         }
@@ -233,10 +228,15 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
       <Navbar />
       
       <main className="flex-1">
-        {/* Banner */}
         <div className="relative h-[300px] md:h-[400px] bg-muted">
           {booth.coverImageUrl && (
-            <Image src={booth.coverImageUrl} alt={booth.name} fill className="object-cover brightness-75" />
+            <Image 
+              src={booth.coverImageUrl} 
+              alt={booth.name} 
+              fill 
+              sizes="100vw"
+              className="object-cover brightness-75" 
+            />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="container mx-auto px-4 absolute bottom-8">
@@ -246,13 +246,18 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        {/* Profile Info */}
         <div className="container mx-auto px-4 relative -mt-16 z-10">
           <div className="bg-white rounded-3xl p-6 md:p-10 shadow-xl border mb-12">
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="relative w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white -mt-20 md:-mt-24">
                 {booth.logoUrl ? (
-                  <Image src={booth.logoUrl} alt={booth.name} fill className="object-cover" />
+                  <Image 
+                    src={booth.logoUrl} 
+                    alt={booth.name} 
+                    fill 
+                    sizes="(max-width: 768px) 128px, 160px"
+                    className="object-cover" 
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-muted/50">
                     <StoreIcon className="h-12 w-12 text-muted-foreground" />
@@ -290,7 +295,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                   {booth.description}
                 </p>
 
-                {/* Rating System */}
                 <div className="pt-6 border-t mt-6">
                   <p className="text-sm font-bold text-muted-foreground mb-3 uppercase tracking-wider">Avalie esta barraca</p>
                   <div className="flex items-center gap-2">
@@ -311,7 +315,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
-          {/* Products Grid */}
           <section className="mb-20">
             <div className="flex items-center justify-between mb-8">
               <h2 className="font-headline text-3xl font-bold">Catálogo de Produtos</h2>
@@ -324,7 +327,13 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                   <Card key={product.id} className="group overflow-hidden border-none shadow-md transition-smooth hover:shadow-xl hover:-translate-y-1 rounded-3xl">
                     <div className="relative h-64 bg-muted">
                       {product.imageUrl && (
-                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover transition-smooth group-hover:scale-105" />
+                        <Image 
+                          src={product.imageUrl} 
+                          alt={product.name} 
+                          fill 
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover transition-smooth group-hover:scale-105" 
+                        />
                       )}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-smooth flex items-center justify-center">
                         <Dialog>
@@ -335,7 +344,13 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                             <div className="grid md:grid-cols-2">
                               <div className="relative h-80 md:h-full bg-muted">
                                 {product.imageUrl && (
-                                  <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                                  <Image 
+                                    src={product.imageUrl} 
+                                    alt={product.name} 
+                                    fill 
+                                    sizes="(max-width: 768px) 100vw, 600px"
+                                    className="object-cover" 
+                                  />
                                 )}
                               </div>
                               <div className="p-8 space-y-6">

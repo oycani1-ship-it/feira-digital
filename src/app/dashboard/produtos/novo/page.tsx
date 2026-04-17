@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -124,7 +125,6 @@ export default function NewProductPage() {
     try {
       const uploadedUrls: string[] = [];
 
-      // Faz upload das imagens para o Storage antes de salvar no Firestore
       for (const img of images) {
         const timestamp = Date.now();
         const filename = img.file.name.replace(/[^a-zA-Z0-9.]/g, "_");
@@ -136,7 +136,6 @@ export default function NewProductPage() {
         uploadedUrls.push(url);
       }
 
-      // Salva o documento no Firestore com a URL pública do Storage
       await addDoc(collection(db, "products"), {
         ...formData,
         name: formData.name.trim(),
@@ -175,7 +174,13 @@ export default function NewProductPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {images.map((img, index) => (
                 <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-muted group">
-                  <Image src={img.preview} alt={`Preview ${index}`} fill className="object-cover" />
+                  <Image 
+                    src={img.preview} 
+                    alt={`Preview ${index}`} 
+                    fill 
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover" 
+                  />
                   <button 
                     type="button"
                     onClick={() => removeImage(index)}

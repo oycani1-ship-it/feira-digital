@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -54,7 +55,6 @@ export default function ProductsPage() {
   const fetchProducts = useCallback(async (userId: string) => {
     setIsLoading(true);
     try {
-      // Tenta com orderBy (pode falhar se o índice não existir)
       let q;
       try {
         q = query(
@@ -69,7 +69,6 @@ export default function ProductsPage() {
         });
         setProducts(items);
       } catch (indexError) {
-        // Fallback: Query simples + ordenação local se o índice não estiver pronto
         q = query(
           collection(db, "products"),
           where("sellerId", "==", userId)
@@ -98,7 +97,6 @@ export default function ProductsPage() {
   }, [toast]);
 
   useEffect(() => {
-    // Só inicia a busca quando o Firebase confirmar o usuário
     if (!authLoading && user) {
       fetchProducts(user.uid);
     }
@@ -112,7 +110,7 @@ export default function ProductsPage() {
       setProducts(prev => prev.filter(p => p.id !== id));
       toast({ title: "Produto excluído", description: "O item foi removido do seu catálogo." });
     } catch (error) {
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível excluir o produto." });
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível excluir the produto." });
     }
   };
 
@@ -180,7 +178,13 @@ export default function ProductsPage() {
                     <TableCell>
                       <div className="relative h-12 w-12 rounded-lg overflow-hidden border bg-muted/50">
                         {product.imageUrl ? (
-                          <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                          <Image 
+                            src={product.imageUrl} 
+                            alt={product.name} 
+                            fill 
+                            sizes="48px"
+                            className="object-cover" 
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Package className="h-4 w-4 text-muted-foreground/30" />
