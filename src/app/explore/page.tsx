@@ -6,9 +6,9 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Star, Filter, X, Store as StoreIcon, Loader2, SlidersHorizontal } from "lucide-react";
+import { Search, MapPin, Star, X, Store as StoreIcon, Loader2, SlidersHorizontal } from "lucide-react";
 import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { 
   collection, 
   getDocs, 
@@ -66,12 +67,23 @@ export default function ExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("categoria") || "all");
   const [selectedState, setSelectedState] = useState(searchParams.get("estado") || "all");
   
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isMoreLoading, setIsMoreLoading] = useState(false);
   const [booths, setBooths] = useState<Booth[]>([]);
   const [hasMore, setHasMore] = useState(true);
   
   const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+
+  // 1. PADRÃO: AGUARDA AUTENTICAÇÃO SER CONFIRMADA
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
 
   const updateURL = useCallback((search: string, category: string, state: string) => {
     const params = new URLSearchParams();
@@ -97,7 +109,6 @@ export default function ExplorePage() {
 
       const normalizedSearch = normalizarParaBusca(search);
 
-      // Query Base do Firestore
       if (normalizedSearch) {
         q = query(
           boothsRef,
@@ -126,7 +137,6 @@ export default function ExplorePage() {
         ...doc.data()
       } as Booth));
 
-      // Filtros Secundários Client-side
       if (category !== "all") {
         results = results.filter(b => b.category === category);
       }
@@ -146,15 +156,17 @@ export default function ExplorePage() {
     }
   }, []);
 
-  // Debounce para busca
+  // 2. SÓ BUSCA QUANDO authLoading === false
   useEffect(() => {
+    if (authLoading) return;
+
     const delayDebounceFn = setTimeout(() => {
       fetchBooths(searchTerm, selectedCategory, selectedState);
       updateURL(searchTerm, selectedCategory, selectedState);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, selectedCategory, selectedState, fetchBooths, updateURL]);
+  }, [searchTerm, selectedCategory, selectedState, fetchBooths, updateURL, authLoading]);
 
   const handleLoadMore = () => {
     if (!isMoreLoading && hasMore) {
@@ -173,6 +185,14 @@ export default function ExplorePage() {
     if (type === 'cat') setSelectedCategory("all");
     if (type === 'state') setSelectedState("all");
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -197,7 +217,6 @@ export default function ExplorePage() {
           </div>
         </div>
 
-        {/* Active Filters Chips */}
         {(selectedCategory !== "all" || selectedState !== "all" || searchTerm) && (
           <div className="flex flex-wrap gap-2 mb-8">
             {searchTerm && (
@@ -222,7 +241,6 @@ export default function ExplorePage() {
         )}
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
           <aside className="hidden lg:block w-72 space-y-8">
             <div className="sticky top-24 bg-white p-6 rounded-3xl border shadow-sm">
               <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
@@ -269,7 +287,6 @@ export default function ExplorePage() {
             </div>
           </aside>
 
-          {/* Mobile Filter Summary */}
           <div className="lg:hidden mb-6">
              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="w-full bg-white border-none shadow-sm">
@@ -284,7 +301,6 @@ export default function ExplorePage() {
              </Select>
           </div>
 
-          {/* Listings */}
           <div className="flex-1">
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

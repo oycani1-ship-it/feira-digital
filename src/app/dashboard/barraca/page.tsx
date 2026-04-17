@@ -128,13 +128,16 @@ export default function BoothSettingsPage() {
         coverImageUrl = await getDownloadURL(coverRef);
       }
 
+      // USO DE setDoc COM merge: true E sellerId GARANTIDO
       await setDoc(doc(db, "booths", userId), {
         ...formData,
         sellerId: userId,
+        sellerEmail: auth.currentUser?.email || "",
         nameNormalizado: normalizarParaBusca(formData.name),
         categoriaNormalizada: normalizarParaBusca(formData.category),
         logoUrl,
         coverImageUrl,
+        isActive: true,
         updatedAt: serverTimestamp(),
       }, { merge: true });
 

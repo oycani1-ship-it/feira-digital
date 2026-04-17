@@ -12,22 +12,28 @@ service cloud.firestore {
     // Regras para Barracas (Booths)
     match /booths/{boothId} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.sellerId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.sellerId == request.auth.uid;
+      allow create: if request.auth != null 
+        && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if request.auth != null 
+        && resource.data.sellerId == request.auth.uid;
     }
 
     // Regras para Produtos (Products)
     match /products/{productId} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.sellerId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.sellerId == request.auth.uid;
+      allow create: if request.auth != null 
+        && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if request.auth != null 
+        && resource.data.sellerId == request.auth.uid;
     }
 
     // Regras para Avaliações (Ratings)
     match /ratings/{ratingId} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null 
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
     }
   }
 }
