@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { db, auth } from "@/lib/firebase";
-import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp, updateDoc, increment } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, onSnapshot, runTransaction, serverTimestamp, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/context/language-context";
 
@@ -27,6 +28,8 @@ interface Product {
   description: string;
   imageUrl: string;
   isActive: boolean;
+  boothId?: string;
+  sellerId?: string;
 }
 
 interface Booth {
@@ -61,78 +64,70 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
   const [userRating, setUserRating] = useState<number>(0);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const boothRef = doc(db, "booths", id);
-        const boothSnap = await getDoc(boothRef);
-        
-        if (boothSnap.exists()) {
-          const bData = boothSnap.data();
-          setBooth({ 
-            id: boothSnap.id, 
-            ...bData,
-            name: bData.nome ?? bData.name ?? "Sem nome",
-            sellerName: bData.sellerName ?? "Artesão",
-            category: bData.categoria ?? bData.category ?? "",
-            city: bData.localizacao ?? bData.city ?? "",
-            state: bData.estado ?? bData.state ?? "",
-            coverImageUrl: bData.capaUrl ?? bData.coverImageUrl ?? ""
-          } as Booth);
-          
-          await updateDoc(boothRef, {
-            views: increment(1)
-          });
-        }
+    // 1. Escuta em tempo real para os dados da barraca
+    const boothRef = doc(db, "booths", id);
+    const unsubBooth = onSnapshot(boothRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const bData = docSnap.data();
+        setBooth({ 
+          id: docSnap.id, 
+          ...bData,
+          name: bData.nome ?? bData.name ?? "Sem nome",
+          sellerName: bData.sellerName ?? "Artesão",
+          category: bData.categoria ?? bData.category ?? "",
+          city: bData.localizacao ?? bData.city ?? "",
+          state: bData.estado ?? bData.state ?? "",
+          description: bData.bio ?? bData.description ?? "",
+          coverImageUrl: bData.capaUrl ?? bData.coverImageUrl ?? ""
+        } as Booth);
+      }
+      setIsLoading(false);
+    });
 
-        let productsSnap = await getDocs(
-          query(
-            collection(db, "products"),
-            where("boothId", "==", id as string),
-            where("isActive", "==", true)
-          )
-        );
-        if (productsSnap.empty) {
-          productsSnap = await getDocs(
-            query(
-              collection(db, "products"),
-              where("sellerId", "==", id as string),
-              where("isActive", "==", true)
-            )
-          );
-        }
-        if (productsSnap.empty) {
-          productsSnap = await getDocs(
-            query(
-              collection(db, "products"),
-              where("sellerId", "==", id as string)
-            )
-          );
-        }
-        setProducts(
-          productsSnap.docs.map(d => ({ 
+    // Registrar visualização (apenas uma vez)
+    updateDoc(boothRef, { views: increment(1) }).catch(console.error);
+
+    // 2. Escuta em tempo real para os produtos desta barraca
+    // Buscamos produtos onde boothId OU sellerId sejam iguais ao ID da barraca
+    const productsQuery = query(
+      collection(db, "products"),
+      where("sellerId", "==", id)
+    );
+
+    const unsubProducts = onSnapshot(productsQuery, (querySnapshot) => {
+      const pList = querySnapshot.docs
+        .map(d => {
+          const data = d.data();
+          return { 
             id: d.id, 
-            ...d.data(),
-            name: d.data().name ?? d.data().nome ?? "Sem nome",
-            price: d.data().price ?? d.data().preco ?? 0,
-            description: d.data().description ?? d.data().descricao ?? ""
-          } as Product))
-        );
+            ...data,
+            name: data.name ?? data.nome ?? "Sem nome",
+            price: data.price ?? data.preco ?? 0,
+            description: data.description ?? data.descricao ?? "",
+            isActive: data.isActive !== false // Trata indefinido como true
+          } as Product;
+        })
+        .filter(p => p.isActive); // Apenas ativos no catálogo público
+      
+      setProducts(pList);
+    });
 
-        if (auth.currentUser) {
-          const ratingId = `${auth.currentUser.uid}_${id}`;
-          const ratingSnap = await getDoc(doc(db, "ratings", ratingId));
-          if (ratingSnap.exists()) {
-            setUserRating(ratingSnap.data().value);
-          }
+    // 3. Verificar avaliação do usuário atual
+    const checkRating = async () => {
+      if (auth.currentUser) {
+        const ratingId = `${auth.currentUser.uid}_${id}`;
+        const ratingSnap = await getDoc(doc(db, "ratings", ratingId));
+        if (ratingSnap.exists()) {
+          setUserRating(ratingSnap.data().value);
         }
-      } catch (error) {
-        console.error("Erro ao carregar dados da barraca:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
+    checkRating();
 
-    fetchData();
+    return () => {
+      unsubBooth();
+      unsubProducts();
+    };
   }, [id]);
 
   const handleWhatsApp = async (productName?: string) => {
@@ -150,7 +145,10 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
     const message = productName 
       ? `Olá! Vi sua barraca ${booth.name ?? ""} na Feira Digital e tenho interesse no produto: ${productName}`
       : `Olá! Vi sua barraca ${booth.name ?? ""} na Feira Digital e gostaria de mais informações.`;
-    window.open(`https://wa.me/${booth.whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
+    
+    // Formata o número (remove caracteres não numéricos)
+    const cleanNumber = booth.whatsapp.replace(/\D/g, '');
+    window.open(`https://wa.me/55${cleanNumber}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleRate = async (value: number) => {
@@ -206,10 +204,10 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
 
         transaction.update(boothRef, {
           totalRatings,
-          averageRating: newAvg
+          averageRating: newAvg,
+          avgRating: newAvg // Mantém sincronia com campo usado em outras queries
         });
 
-        setBooth(prev => prev ? ({ ...prev, totalRatings, averageRating: newAvg }) : null);
         setUserRating(value);
       });
 
@@ -306,10 +304,10 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Star className="h-4 w-4 text-amber-500 fill-amber-500" /> 
-                    <span className="font-bold">{(booth.averageRating ?? 0).toFixed(1)}</span>
+                    <span className="font-bold">{(booth.averageRating ?? booth.avgRating ?? 0).toFixed(1)}</span>
                     <span className="text-muted-foreground">({booth.totalRatings ?? 0} {t('boothDetail.evaluations')})</span>
                   </div>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none rounded-full px-4">{booth.category?.toUpperCase()}</Badge>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none rounded-full px-4">{(booth.category ?? "").toUpperCase()}</Badge>
                 </div>
 
                 <p className="text-muted-foreground leading-relaxed max-w-3xl text-lg">
