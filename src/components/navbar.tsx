@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Search, ShoppingBag, User, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Search, ShoppingBag, User, Menu, X, LogOut, LayoutDashboard, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/context/language-context";
+import { Language } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +25,7 @@ export function Navbar() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -53,14 +56,14 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/explore" className="text-sm font-medium hover:text-primary transition-colors">Explorar</Link>
-            <Link href="/#como-funciona" className="text-sm font-medium hover:text-primary transition-colors">Como Funciona</Link>
+            <Link href="/explore" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.explore')}</Link>
+            <Link href="/#como-funciona" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.howItWorks')}</Link>
           </div>
         </div>
 
         <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-sm mx-8 relative">
           <Input 
-            placeholder="Buscar barracas, produtos..." 
+            placeholder={t('nav.searchPlaceholder')}
             className="pl-10 h-10 bg-muted/50 border-none focus-visible:ring-primary"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -69,6 +72,19 @@ export function Navbar() {
         </form>
 
         <div className="flex items-center gap-2 md:gap-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Globe className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setLanguage('pt-BR')} className={language === 'pt-BR' ? 'bg-muted' : ''}>Português (BR)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('en-US')} className={language === 'en-US' ? 'bg-muted' : ''}>English (US)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('es-ES')} className={language === 'es-ES' ? 'bg-muted' : ''}>Español (ES)</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -90,22 +106,22 @@ export function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="cursor-pointer">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
-                    <span>Painel do Vendedor</span>
+                    <span>{t('nav.dashboard')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sair</span>
+                  <span>{t('nav.logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
               <Button variant="ghost" asChild className="hidden sm:inline-flex">
-                <Link href="/login">Entrar</Link>
+                <Link href="/login">{t('nav.login')}</Link>
               </Button>
               <Button asChild className="bg-primary hover:bg-primary/90">
-                <Link href="/register">Criar Barraca</Link>
+                <Link href="/register">{t('nav.createBooth')}</Link>
               </Button>
             </div>
           )}
@@ -120,7 +136,7 @@ export function Navbar() {
         <div className="md:hidden p-4 bg-background border-b animate-in slide-in-from-top-4">
           <form onSubmit={handleSearch} className="relative mb-4">
             <Input 
-              placeholder="Buscar..." 
+              placeholder={t('nav.searchPlaceholder')}
               className="pl-10 h-10 bg-muted/50"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -128,10 +144,10 @@ export function Navbar() {
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           </form>
           <div className="flex flex-col gap-4">
-            <Link href="/explore" className="text-lg font-medium py-2" onClick={() => setIsOpen(false)}>Explorar</Link>
-            <Link href="/#como-funciona" className="text-lg font-medium py-2" onClick={() => setIsOpen(false)}>Como Funciona</Link>
+            <Link href="/explore" className="text-lg font-medium py-2" onClick={() => setIsOpen(false)}>{t('nav.explore')}</Link>
+            <Link href="/#como-funciona" className="text-lg font-medium py-2" onClick={() => setIsOpen(false)}>{t('nav.howItWorks')}</Link>
             {!user && (
-              <Link href="/login" className="text-lg font-medium py-2 border-t pt-4" onClick={() => setIsOpen(false)}>Entrar</Link>
+              <Link href="/login" className="text-lg font-medium py-2 border-t pt-4" onClick={() => setIsOpen(false)}>{t('nav.login')}</Link>
             )}
           </div>
         </div>

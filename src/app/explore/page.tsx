@@ -14,18 +14,8 @@ import {
 import { Store, Search, X } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-
-const CATEGORIAS = [
-  "Alimentação","Acessórios","Bijouterias e Joias","Bolsas e Couros",
-  "Brinquedos e Bonecas","Cama/Mesa/Banho","Cerâmicas","Confecção Feminina",
-  "Confecção Infantil","Decoração","Doces e Salgados","Fantasias",
-  "Moda Artesanal","Móveis e Puffs","Quadros e Molduras","Roupas",
-  "Sapatos e Calçados","Tapetes e Redes","Velas Decorativas","Outros",
-];
-const ESTADOS = [
-  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
-  "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
-];
+import { useTranslation } from "@/context/language-context";
+import { CATEGORIAS_PLATAFORMA, ESTADOS_BR } from "@/lib/constants";
 
 interface Booth {
   id: string;
@@ -44,12 +34,11 @@ export default function ExplorePage() {
   const [search, setSearch]       = useState("");
   const [categoria, setCategoria] = useState("todas");
   const [estado, setEstado]       = useState("Brasil inteiro");
+  const { t } = useTranslation();
   
-  // ✅ FLAG para buscar só UMA VEZ — evita loop
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    // ✅ Guard: executa apenas na montagem inicial
     if (hasFetched.current) return;
     hasFetched.current = true;
 
@@ -58,7 +47,6 @@ export default function ExplorePage() {
       try {
         const snap = await getDocs(query(collection(db, "booths"), limit(100)));
         const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Booth));
-        // Mostra tudo exceto isActive explicitamente false
         setAllBooths(data.filter(b => b.isActive !== false));
       } catch (err) {
         console.error("Erro ao buscar barracas:", err);
@@ -74,12 +62,11 @@ export default function ExplorePage() {
     }
 
     fetchAll();
-  }, []); // ✅ Array vazio — executa só na montagem
+  }, []);
 
   const normalizar = (s: string) =>
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // ✅ Filtro calculado inline
   const filtered = allBooths.filter(b => {
     const nome = normalizar(b.nome || b.name || "");
     const cat  = b.categoria || b.category || "";
@@ -108,9 +95,9 @@ export default function ExplorePage() {
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           <div className="mb-10">
-            <h1 className="font-headline text-4xl font-bold mb-3">Explorar Feira</h1>
+            <h1 className="font-headline text-4xl font-bold mb-3">{t('explore.title')}</h1>
             <p className="text-muted-foreground text-lg">
-              Artesanato autêntico direto de quem faz.
+              {t('explore.subtitle')}
             </p>
           </div>
 
@@ -120,7 +107,7 @@ export default function ExplorePage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 className="pl-12 h-14 rounded-2xl bg-white border-none shadow-sm focus-visible:ring-primary"
-                placeholder="Nome da barraca ou categoria..."
+                placeholder={t('explore.searchPlaceholder')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -130,11 +117,11 @@ export default function ExplorePage() {
               <div className="flex-1 md:w-48">
                 <Select value={estado} onValueChange={setEstado}>
                   <SelectTrigger className="h-14 rounded-2xl bg-white border-none shadow-sm">
-                    <SelectValue placeholder="Estado" />
+                    <SelectValue placeholder={t('explore.state')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Brasil inteiro">Brasil inteiro</SelectItem>
-                    {ESTADOS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                    <SelectItem value="Brasil inteiro">{t('explore.allStates')}</SelectItem>
+                    {ESTADOS_BR.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -142,18 +129,18 @@ export default function ExplorePage() {
               <div className="flex-1 md:w-56">
                 <Select value={categoria} onValueChange={setCategoria}>
                   <SelectTrigger className="h-14 rounded-2xl bg-white border-none shadow-sm">
-                    <SelectValue placeholder="Categoria" />
+                    <SelectValue placeholder={t('explore.category')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todas">Todas as categorias</SelectItem>
-                    {CATEGORIAS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    <SelectItem value="todas">{t('explore.allCategories')}</SelectItem>
+                    {CATEGORIAS_PLATAFORMA.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
               {temFiltro && (
                 <Button variant="ghost" onClick={limpar} className="h-14 px-6 rounded-2xl hover:bg-white/50">
-                  <X className="h-4 w-4 mr-2" /> Limpar
+                  <X className="h-4 w-4 mr-2" /> {t('explore.clearFilters')}
                 </Button>
               )}
             </div>
@@ -169,11 +156,11 @@ export default function ExplorePage() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-24 bg-muted/20 rounded-[2.5rem] border-2 border-dashed flex flex-col items-center">
               <Store className="h-16 w-16 text-muted-foreground/20 mb-6" />
-              <h3 className="text-2xl font-bold mb-2">Nenhuma barraca encontrada</h3>
+              <h3 className="text-2xl font-bold mb-2">{t('explore.noResults')}</h3>
               <p className="text-muted-foreground mb-8 max-w-xs mx-auto">
-                Tente ajustar seus filtros ou termos de busca para encontrar artesãos.
+                {t('explore.noResultsDesc')}
               </p>
-              <Button onClick={limpar} className="rounded-full px-8">Limpar todos os filtros</Button>
+              <Button onClick={limpar} className="rounded-full px-8">{t('explore.clearFilters')}</Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -223,7 +210,7 @@ export default function ExplorePage() {
                         )}
                         {booth.avgRating && booth.avgRating > 0 ? (
                           <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
-                            <span>⭐ {booth.avgRating.toFixed(1)} ({booth.totalRatings})</span>
+                            <span>⭐ {booth.avgRating.toFixed(1)} ({booth.totalRatings} {t('explore.evaluations')})</span>
                           </div>
                         ) : (
                           <div className="text-xs text-muted-foreground/50">Ainda não avaliada</div>

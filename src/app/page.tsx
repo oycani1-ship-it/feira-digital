@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -12,9 +11,11 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { useTranslation } from "@/context/language-context";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
+  const { t } = useTranslation();
   const featuredCategories = CATEGORIES.slice(0, 8);
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-bg');
 
@@ -45,26 +46,25 @@ export default function Home() {
           </div>
           <div className="container mx-auto px-4 relative z-10 text-center text-white">
             <h1 className="font-headline text-5xl md:text-7xl font-bold mb-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-              O coração do artesanato,<br /><span className="text-secondary">agora no digital.</span>
+              {t('hero.title')}<br /><span className="text-secondary">{t('hero.titleHighlight')}</span>
             </h1>
             <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto font-light animate-in fade-in slide-in-from-bottom-12 duration-1000">
-              Descubra peças únicas feitas com amor por artesãos brasileiros. 
-              Sua próxima descoberta artesanal está a um clique de distância.
+              {t('hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-16 duration-1000">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg h-14 px-8 w-full sm:w-auto" asChild>
-                <Link href="/explore">Começar a Explorar <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                <Link href="/explore">{t('hero.ctaExplore')} <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
               
               <Button size="lg" variant="secondary" className="text-lg h-14 px-8 w-full sm:w-auto font-bold shadow-lg" asChild>
                 <Link href={user ? "/dashboard" : "/login"}>
-                  <LayoutDashboard className="mr-2 h-5 w-5" /> Acessar Minha Barraca
+                  <LayoutDashboard className="mr-2 h-5 w-5" /> {t('hero.ctaMyBooth')}
                 </Link>
               </Button>
 
               {!user && (
                 <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur border-white/20 text-white hover:bg-white/20 text-lg h-14 px-8 w-full sm:w-auto" asChild>
-                  <Link href="/register">Abrir minha Barraca</Link>
+                  <Link href="/register">{t('hero.ctaRegister')}</Link>
                 </Button>
               )}
             </div>
@@ -75,8 +75,8 @@ export default function Home() {
         <section className="py-20 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4">Categorias Populares</h2>
-              <p className="text-muted-foreground">Encontre o que você procura entre diversas artes e especialidades.</p>
+              <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4">{t('home.popularCategories')}</h2>
+              <p className="text-muted-foreground">{t('home.categoriesSubtitle')}</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
@@ -105,32 +105,32 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row gap-16 items-center">
               <div className="lg:w-1/2">
-                <h2 className="font-headline text-4xl font-bold mb-8">Transforme seu talento em um negócio digital.</h2>
+                <h2 className="font-headline text-4xl font-bold mb-8">{t('home.howItWorksTitle')}</h2>
                 <div className="space-y-8">
                   <div className="flex gap-6">
                     <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">1</div>
                     <div>
-                      <h3 className="text-xl font-bold mb-2">Crie seu Perfil</h3>
-                      <p className="text-muted-foreground">Cadastre-se e monte sua barraca virtual em poucos minutos. Adicione fotos, história e sua localização.</p>
+                      <h3 className="text-xl font-bold mb-2">{t('home.step1Title')}</h3>
+                      <p className="text-muted-foreground">{t('home.step1Desc')}</p>
                     </div>
                   </div>
                   <div className="flex gap-6">
                     <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">2</div>
                     <div>
-                      <h3 className="text-xl font-bold mb-2">Adicione seus Produtos</h3>
-                      <p className="text-muted-foreground">Use nossa IA para gerar descrições atraentes e tags que ajudam os clientes a encontrar sua arte.</p>
+                      <h3 className="text-xl font-bold mb-2">{t('home.step2Title')}</h3>
+                      <p className="text-muted-foreground">{t('home.step2Desc')}</p>
                     </div>
                   </div>
                   <div className="flex gap-6">
                     <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">3</div>
                     <div>
-                      <h3 className="text-xl font-bold mb-2">Comece a Vender</h3>
-                      <p className="text-muted-foreground">Receba contatos diretos pelo WhatsApp e gerencie suas vendas sem intermediários ou taxas abusivas.</p>
+                      <h3 className="text-xl font-bold mb-2">{t('home.step3Title')}</h3>
+                      <p className="text-muted-foreground">{t('home.step3Desc')}</p>
                     </div>
                   </div>
                 </div>
                 <Button className="mt-12 bg-primary hover:bg-primary/90" size="lg" asChild>
-                  <Link href="/register">Criar minha Barraca Agora</Link>
+                  <Link href="/register">{t('home.ctaStep')}</Link>
                 </Button>
               </div>
               <div className="lg:w-1/2 relative h-[500px] w-full">
@@ -167,22 +167,22 @@ export default function Home() {
                 <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <Store className="h-8 w-8 text-secondary" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Autenticidade</h3>
-                <p className="text-muted-foreground">Cada barraca é um world único, com histórias reais por trás de cada criação.</p>
+                <h3 className="text-xl font-bold mb-3">{t('home.benefit1Title')}</h3>
+                <p className="text-muted-foreground">{t('home.benefit1Desc')}</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <Sparkles className="h-8 w-8 text-secondary" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Tecnologia com IA</h3>
-                <p className="text-muted-foreground">Ferramentas inteligentes para ajudar você a descrever e categorizar seus produtos.</p>
+                <h3 className="text-xl font-bold mb-3">{t('home.benefit2Title')}</h3>
+                <p className="text-muted-foreground">{t('home.benefit2Desc')}</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <Heart className="h-8 w-8 text-secondary" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Direto ao Ponto</h3>
-                <p className="text-muted-foreground">Negociação direta com o artesão via WhatsApp, sem complicação ou taxas extras.</p>
+                <h3 className="text-xl font-bold mb-3">{t('home.benefit3Title')}</h3>
+                <p className="text-muted-foreground">{t('home.benefit3Desc')}</p>
               </div>
             </div>
           </div>
