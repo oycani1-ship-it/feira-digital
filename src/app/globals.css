@@ -4,77 +4,87 @@
 
 @layer base {
   :root {
-    /* Paleta Inspirada em Feira: Terracota, Palha e Índigo */
-    --background: 35 30% 96%; /* #F8F5F0 - Linen/Cream */
-    --foreground: 25 40% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 25 40% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 25 40% 10%;
-    
-    /* Primary: Terracota (Argila/Cerâmica) */
-    --primary: 15 65% 45%; 
+    --background: 40 25% 96%; /* #F7F5F0 */
+    --foreground: 30 10% 7%;  /* #141210 */
+    --primary: 38 78% 44%;   /* #C8861A */
     --primary-foreground: 0 0% 98%;
-    
-    /* Secondary: Palha/Ocre (Cestaria) */
-    --secondary: 35 60% 75%; 
-    --secondary-foreground: 25 40% 20%;
-    
-    /* Accent: Índigo (Tingimento Manual) */
-    --accent: 210 30% 92%;
-    --accent-foreground: 210 50% 35%;
-    
-    --muted: 35 15% 90%;
-    --muted-foreground: 25 20% 45%;
+    --card: 40 25% 96%;
+    --card-foreground: 30 10% 7%;
+    --popover: 40 25% 96%;
+    --popover-foreground: 30 10% 7%;
+    --secondary: 38 20% 90%;
+    --secondary-foreground: 30 10% 7%;
+    --muted: 40 10% 90%;
+    --muted-foreground: 30 5% 35%;
+    --accent: 38 78% 44%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 35 20% 85%;
-    --input: 35 20% 85%;
-    --ring: 15 65% 45%;
-    --radius: 1rem;
-  }
-  .dark {
-    --background: 25 30% 10%;
-    --foreground: 35 30% 96%;
-    --card: 25 30% 12%;
-    --card-foreground: 35 30% 96%;
-    --popover: 25 30% 12%;
-    --popover-foreground: 35 30% 96%;
-    --primary: 15 65% 50%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 35 40% 30%;
-    --secondary-foreground: 35 30% 90%;
-    --muted: 25 20% 18%;
-    --muted-foreground: 35 10% 70%;
-    --accent: 210 40% 20%;
-    --accent-foreground: 35 30% 96%;
-    --border: 25 20% 20%;
-    --input: 25 20% 20%;
-    --ring: 15 65% 50%;
+    --border: 30 10% 85%;
+    --input: 30 10% 85%;
+    --ring: 38 78% 44%;
+    --radius: 0rem;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    cursor: none !important;
   }
+  
+  @media (hover: none) {
+    * {
+      cursor: auto !important;
+    }
+  }
+
   body {
-    @apply bg-background text-foreground font-body antialiased;
-    transition: background-color 200ms ease, color 200ms ease;
+    @apply bg-background text-foreground selection:bg-primary/20 antialiased;
+    font-family: 'Satoshi', sans-serif;
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Instrument Serif', serif;
+    @apply font-normal tracking-tight;
   }
 }
 
-.transition-smooth {
-  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+/* Custom Utilities */
+.transition-expo {
+  transition: all 700ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.link-underline {
+  @apply relative inline-block;
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+.link-underline::after {
+  content: '';
+  @apply absolute bottom-0 right-0 h-[1px] w-full bg-foreground scale-x-0 transition-transform duration-300 ease-out origin-right;
+}
+
+.link-underline:hover::after {
+  @apply scale-x-100 origin-left;
+}
+
+/* Lenis Smooth Scroll */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }

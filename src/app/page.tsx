@@ -1,188 +1,147 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Store, Sparkles, Heart, LayoutDashboard } from "lucide-react";
-import { CATEGORIES } from "@/lib/constants";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { useEffect, useState } from "react";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { MagneticButton } from "@/components/ui/magnetic-button";
+import { TextReveal } from "@/components/ui/text-reveal";
+import { ArrowRight, MoveUpRight } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useTranslation } from "@/context/language-context";
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
   const { t } = useTranslation();
-  const featuredCategories = CATEGORIES.slice(0, 8);
-  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-bg');
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1.15, 1.3]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
       <Navbar />
       
       <main>
-        {/* Hero Section */}
-        <section className="relative h-[650px] flex items-center justify-center overflow-hidden">
+        {/* HERO - Asymmetric Luxury */}
+        <section ref={heroRef} className="relative min-h-screen flex items-end pb-24 px-4 lg:px-12 overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <Image 
-              src={heroImage?.imageUrl || "https://picsum.photos/seed/feira-hero/1200/600"} 
-              alt="Feira de Artesanato"
-              fill
-              sizes="100vw"
-              className="object-cover brightness-[0.4]"
-              priority
-              data-ai-hint="artisan craft fair pottery"
+            <motion.div style={{ y, scale }} className="relative w-full h-full">
+              <Image 
+                src="https://picsum.photos/seed/editorial-1/1920/1080"
+                alt="Editorial Craft"
+                fill
+                priority
+                className="object-cover grayscale brightness-[0.7]"
+                sizes="100vw"
+              />
+              <div className="absolute inset-0 bg-background/10 mix-blend-multiply" />
+            </motion.div>
+          </div>
+
+          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-8 gap-8 relative z-10">
+            <div className="lg:col-span-5">
+              <TextReveal 
+                as="h1"
+                text="The singular resonance of raw craftsmanship."
+                className="text-6xl md:text-8xl text-white leading-[0.9] max-w-4xl"
+              />
+            </div>
+            <div className="lg:col-span-3 flex flex-col justify-end items-start lg:items-end">
+              <p className="text-white/80 text-lg mb-8 max-w-sm lg:text-right">
+                A curated digital stage for artisanal excellence. Where every stitch narrates a lineage of mastery.
+              </p>
+              <MagneticButton>
+                <Link href="/explore" className="bg-primary text-white px-12 py-5 rounded-none flex items-center gap-4 group transition-expo">
+                  <span className="text-sm font-bold uppercase tracking-widest">Begin Discovery</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-expo" />
+                </Link>
+              </MagneticButton>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION DIVIDER - Scissor Cut */}
+        <div className="h-px bg-border w-full scale-x-0 origin-left" data-cursor="cut" />
+
+        {/* FEATURE 01 - Editorial Grid */}
+        <section className="py-32 px-4 lg:px-12 bg-background">
+          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div className="lg:col-span-5 order-2 lg:order-1">
+              <div className="aspect-[4/5] relative overflow-hidden group">
+                <Image 
+                  src="https://picsum.photos/seed/editorial-2/1000/1250"
+                  alt="Craft"
+                  fill
+                  className="object-cover transition-expo scale-110 group-hover:scale-100 grayscale hover:grayscale-0"
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                />
+              </div>
+            </div>
+            <div className="lg:col-span-7 lg:pl-12 order-1 lg:order-2">
+              <span className="text-primary font-bold uppercase text-xs tracking-widest mb-6 block">Legacy & Form</span>
+              <TextReveal 
+                text="Curated collections that transcend the ephemeral."
+                className="text-4xl md:text-6xl mb-8"
+              />
+              <p className="text-muted-foreground text-xl leading-relaxed max-w-xl mb-12">
+                We bridge the gap between ancient techniques and contemporary sensibilities. No mass production. No compromises. Just pure human intention.
+              </p>
+              <Link href="/explore" className="link-underline font-bold text-sm uppercase tracking-widest">
+                Explore Collections
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* FULL BLEED MOMENT */}
+        <section className="h-[70vh] relative overflow-hidden">
+          <Image 
+            src="https://picsum.photos/seed/editorial-3/1920/800"
+            alt="Process"
+            fill
+            className="object-cover grayscale opacity-80"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            <TextReveal 
+              text="Authenticity is the ultimate luxury."
+              className="text-white text-4xl md:text-7xl text-center px-4 italic"
             />
           </div>
-          <div className="container mx-auto px-4 relative z-10 text-center text-white">
-            <h1 className="font-headline text-5xl md:text-7xl font-bold mb-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-              {t('hero.title')}<br /><span className="text-secondary">{t('hero.titleHighlight')}</span>
-            </h1>
-            <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto font-light animate-in fade-in slide-in-from-bottom-12 duration-1000">
-              {t('hero.subtitle')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-16 duration-1000">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg h-14 px-8 w-full sm:w-auto" asChild>
-                <Link href="/explore">{t('hero.ctaExplore')} <ArrowRight className="ml-2 h-5 w-5" /></Link>
-              </Button>
-              
-              <Button size="lg" variant="secondary" className="text-lg h-14 px-8 w-full sm:w-auto font-bold shadow-lg" asChild>
-                <Link href={user ? "/dashboard" : "/login"}>
-                  <LayoutDashboard className="mr-2 h-5 w-5" /> {t('hero.ctaMyBooth')}
+        </section>
+
+        {/* FEATURE 02 - Inverted Grid */}
+        <section className="py-32 px-4 lg:px-12 bg-background">
+          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div className="lg:col-span-7 pr-12">
+              <span className="text-primary font-bold uppercase text-xs tracking-widest mb-6 block">The Artisan Path</span>
+              <TextReveal 
+                text="Direct dialogue with master makers."
+                className="text-4xl md:text-6xl mb-8"
+              />
+              <p className="text-muted-foreground text-xl leading-relaxed max-w-xl mb-12">
+                Connect directly via WhatsApp. Negotiate the soul of your acquisition without middlemen. A marketplace built on trust and transparency.
+              </p>
+              <MagneticButton>
+                <Link href="/register" className="border border-foreground px-12 py-5 text-sm font-bold uppercase tracking-widest hover:bg-foreground hover:text-background transition-expo">
+                  Join as an Artisan
                 </Link>
-              </Button>
-
-              {!user && (
-                <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur border-white/20 text-white hover:bg-white/20 text-lg h-14 px-8 w-full sm:w-auto" asChild>
-                  <Link href="/register">{t('hero.ctaRegister')}</Link>
-                </Button>
-              )}
+              </MagneticButton>
             </div>
-          </div>
-        </section>
-
-        {/* Categories Grid */}
-        <section className="py-20 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4">{t('home.popularCategories')}</h2>
-              <p className="text-muted-foreground">{t('home.categoriesSubtitle')}</p>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
-              {featuredCategories.map((cat, i) => (
-                <Link key={cat} href={`/explore?category=${encodeURIComponent(cat)}`} className="group">
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center transition-smooth group-hover:bg-primary group-hover:scale-110 shadow-sm overflow-hidden relative">
-                       <Image 
-                        src={`https://picsum.photos/seed/cat-${i}/200/200`}
-                        alt={cat}
-                        fill
-                        sizes="80px"
-                        className="object-cover opacity-60 group-hover:opacity-100 transition-opacity"
-                       />
-                    </div>
-                    <span className="text-sm font-medium group-hover:text-primary transition-colors">{cat}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* How it Works */}
-        <section id="como-funciona" className="py-24 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col lg:flex-row gap-16 items-center">
-              <div className="lg:w-1/2">
-                <h2 className="font-headline text-4xl font-bold mb-8">{t('home.howItWorksTitle')}</h2>
-                <div className="space-y-8">
-                  <div className="flex gap-6">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">1</div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{t('home.step1Title')}</h3>
-                      <p className="text-muted-foreground">{t('home.step1Desc')}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-6">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">2</div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{t('home.step2Title')}</h3>
-                      <p className="text-muted-foreground">{t('home.step2Desc')}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-6">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">3</div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{t('home.step3Title')}</h3>
-                      <p className="text-muted-foreground">{t('home.step3Desc')}</p>
-                    </div>
-                  </div>
-                </div>
-                <Button className="mt-12 bg-primary hover:bg-primary/90" size="lg" asChild>
-                  <Link href="/register">{t('home.ctaStep')}</Link>
-                </Button>
-              </div>
-              <div className="lg:w-1/2 relative h-[500px] w-full">
-                <div className="absolute top-0 right-0 w-4/5 h-4/5 rounded-2xl overflow-hidden shadow-2xl">
-                  <Image 
-                    src="https://picsum.photos/seed/artisan-working/600/600" 
-                    fill 
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover" 
-                    alt="Artesão trabalhando" 
-                    data-ai-hint="artisan working" 
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 w-3/5 h-3/5 rounded-2xl border-8 border-white overflow-hidden shadow-2xl">
-                  <Image 
-                    src="https://picsum.photos/seed/product-detail/600/600" 
-                    fill 
-                    sizes="(max-width: 1024px) 100vw, 40vw"
-                    className="object-cover" 
-                    alt="Produto artesanal" 
-                    data-ai-hint="craft product" 
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features / Benefits */}
-        <section className="py-24">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-3 gap-12">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Store className="h-8 w-8 text-secondary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">{t('home.benefit1Title')}</h3>
-                <p className="text-muted-foreground">{t('home.benefit1Desc')}</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Sparkles className="h-8 w-8 text-secondary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">{t('home.benefit2Title')}</h3>
-                <p className="text-muted-foreground">{t('home.benefit2Desc')}</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Heart className="h-8 w-8 text-secondary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">{t('home.benefit3Title')}</h3>
-                <p className="text-muted-foreground">{t('home.benefit3Desc')}</p>
+            <div className="lg:col-span-5">
+              <div className="aspect-[4/5] relative overflow-hidden group">
+                <Image 
+                  src="https://picsum.photos/seed/editorial-4/1000/1250"
+                  alt="Handmade"
+                  fill
+                  className="object-cover transition-expo scale-110 group-hover:scale-100 grayscale hover:grayscale-0"
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                />
               </div>
             </div>
           </div>
