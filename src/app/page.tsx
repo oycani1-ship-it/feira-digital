@@ -17,17 +17,21 @@ import { motion, useScroll, useTransform } from "framer-motion";
 export default function Home() {
   const { t } = useTranslation();
   const [isLoaded, setIsLoaded] = useState(false);
-  const heroRef = useRef(null);
+  const [isReady, setIsReady] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
   
   const { scrollYProgress } = useScroll({
-    target: heroRef,
+    target: isReady ? (heroRef as any) : undefined,
     offset: ["start start", "end start"],
-    layoutEffect: false, // Resolve o erro de hidratação quando o ref ainda não está pronto
+    layoutEffect: false,
   });
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
 
   useEffect(() => {
+    if (heroRef.current) {
+      setIsReady(true);
+    }
     const timer = setTimeout(() => setIsLoaded(true), 1200);
     return () => clearTimeout(timer);
   }, []);
