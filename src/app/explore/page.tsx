@@ -103,7 +103,6 @@ export default function ExplorePage() {
             </p>
           </div>
 
-          {/* Busca e Filtros */}
           <div className="flex flex-col lg:flex-row gap-4 mb-16">
             <div className="relative flex-1 group" data-cursor="stitch">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -148,7 +147,6 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          {/* Grid de resultados */}
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
               {[...Array(6)].map((_, i) => (

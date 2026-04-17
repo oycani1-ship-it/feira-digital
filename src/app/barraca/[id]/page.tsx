@@ -74,18 +74,33 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           });
         }
 
-        let snap = await getDocs(
-          query(collection(db, "products"),
-          where("boothId", "==", id),
-          where("isActive", "==", true))
+        let productsSnap = await getDocs(
+          query(
+            collection(db, "products"),
+            where("boothId", "==", id as string),
+            where("isActive", "==", true)
+          )
         );
-        if (snap.empty) {
-          snap = await getDocs(
-            query(collection(db, "products"),
-              where("sellerId", "==", id))
+        if (productsSnap.empty) {
+          productsSnap = await getDocs(
+            query(
+              collection(db, "products"),
+              where("sellerId", "==", id as string),
+              where("isActive", "==", true)
+            )
           );
         }
-        setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() } as Product)));
+        if (productsSnap.empty) {
+          productsSnap = await getDocs(
+            query(
+              collection(db, "products"),
+              where("sellerId", "==", id as string)
+            )
+          );
+        }
+        setProducts(
+          productsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product))
+        );
 
         if (auth.currentUser) {
           const ratingId = `${auth.currentUser.uid}_${id}`;
