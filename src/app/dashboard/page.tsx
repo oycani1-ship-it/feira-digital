@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useTranslation } from "@/context/language-context";
+import { motion } from "framer-motion";
+import { MagneticButton } from "@/components/ui/magnetic-button";
+import { WovenText } from "@/components/ui/woven-text";
 
 export default function DashboardHome() {
   const { t } = useTranslation();
@@ -82,95 +85,103 @@ export default function DashboardHome() {
     );
   }
 
+  const quickActions = [
+    {
+      href: "/dashboard/produtos/novo",
+      icon: Plus,
+      label: t('dashboard.home.quickActions.newProduct'),
+      color: "bg-primary text-primary-foreground"
+    },
+    {
+      href: "/dashboard/barraca",
+      icon: Store,
+      label: t('dashboard.home.quickActions.editBooth'),
+      color: "bg-surface text-foreground border border-border"
+    },
+    {
+      href: user ? `/barraca/${user.uid}` : "/explore",
+      icon: ExternalLink,
+      label: t('dashboard.home.quickActions.viewPublic'),
+      color: "bg-surface text-foreground border border-border"
+    }
+  ];
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="font-headline text-3xl font-bold mb-2">{t('dashboard.home.welcome')}, {user?.displayName?.split(' ')[0] || "Artesão"}!</h1>
-        <p className="text-muted-foreground">{t('dashboard.home.subtitle')}</p>
+    <div className="space-y-12 animate-in fade-in duration-700">
+      <header>
+        <WovenText 
+          as="h1"
+          text={`${t('dashboard.home.welcome')}, ${user?.displayName?.split(' ')[0] || "Artesão"}!`}
+          className="text-4xl md:text-5xl font-display mb-3"
+        />
+        <p className="text-muted-foreground max-w-2xl">
+          {t('dashboard.home.subtitle')}
+        </p>
+      </header>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: t('dashboard.home.stats.views'), val: stats.views, icon: Eye, desc: t('dashboard.home.stats.viewsDesc') },
+          { label: t('dashboard.home.stats.products'), val: stats.products, icon: Package, desc: t('dashboard.home.stats.productsDesc') },
+          { label: t('dashboard.home.stats.rating'), val: stats.rating.toFixed(1), icon: Star, desc: t('dashboard.home.stats.ratingDesc').replace('{count}', stats.totalRatings.toString()) },
+          { label: t('dashboard.home.stats.clicks'), val: stats.clicks, icon: MessageCircle, desc: t('dashboard.home.stats.clicksDesc') },
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+          >
+            <Card className="border-none shadow-sm bg-surface overflow-hidden group">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="font-mono-tag text-[10px] uppercase tracking-widest text-muted-foreground">{stat.label}</CardTitle>
+                <stat.icon className="h-4 w-4 text-primary opacity-50 group-hover:opacity-100 transition-opacity" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-display mb-1">{stat.val}</div>
+                <p className="text-[10px] font-mono-tag text-muted-foreground uppercase tracking-tighter">{stat.desc}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm bg-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-primary/70">{t('dashboard.home.stats.views')}</CardTitle>
-            <Eye className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.views}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">{t('dashboard.home.stats.viewsDesc')}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-none shadow-sm bg-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-primary/70">{t('dashboard.home.stats.products')}</CardTitle>
-            <Package className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.products}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">{t('dashboard.home.stats.productsDesc')}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-primary/70">{t('dashboard.home.stats.rating')}</CardTitle>
-            <Star className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.rating.toFixed(1)}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">{t('dashboard.home.stats.ratingDesc').replace('{count}', stats.totalRatings.toString())}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-primary/70">{t('dashboard.home.stats.clicks')}</CardTitle>
-            <MessageCircle className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.clicks}</div>
-            <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-              {t('dashboard.home.stats.clicksDesc')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <h2 className="font-bold text-xl">{t('dashboard.home.quickActions.title')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button asChild className="h-16 justify-between px-6" variant="outline">
-              <Link href="/dashboard/produtos/novo">
-                <span className="flex items-center gap-3 font-bold"><Plus className="h-5 w-5 text-primary" /> {t('dashboard.home.quickActions.newProduct')}</span>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            </Button>
-            <Button asChild className="h-16 justify-between px-6" variant="outline">
-              <Link href="/dashboard/barraca">
-                <span className="flex items-center gap-3 font-bold"><Store className="h-5 w-5 text-primary" /> {t('dashboard.home.quickActions.editBooth')}</span>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            </Button>
-            <Button asChild className="h-16 justify-between px-6" variant="outline">
-              <Link href={user ? `/barraca/${user.uid}` : "/explore"}>
-                <span className="flex items-center gap-3 font-bold"><ExternalLink className="h-5 w-5 text-primary" /> {t('dashboard.home.quickActions.viewPublic')}</span>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            </Button>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        {/* Quick Actions */}
+        <div className="lg:col-span-7 space-y-6">
+          <h2 className="font-display text-2xl italic">{t('dashboard.home.quickActions.title')}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {quickActions.map((action, i) => (
+              <MagneticButton key={i} className="w-full">
+                <Link 
+                  href={action.href}
+                  className={`flex items-center justify-between w-full h-20 px-6 rounded-none transition-all duration-300 group ${action.color}`}
+                  data-cursor="stitch"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-white/10 rounded-full group-hover:scale-110 transition-transform">
+                      <action.icon className="h-5 w-5" />
+                    </div>
+                    <span className="font-mono-tag text-[10px] uppercase tracking-widest font-bold">{action.label}</span>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+                </Link>
+              </MagneticButton>
+            ))}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h2 className="font-bold text-xl">{t('dashboard.home.tips.title')}</h2>
-          <Card className="border-none bg-muted/30">
+        {/* Tips Section */}
+        <div className="lg:col-span-5 space-y-6">
+          <h2 className="font-display text-2xl italic">{t('dashboard.home.tips.title')}</h2>
+          <Card className="border-border/50 bg-surface/50 dog-ear p-2">
             <CardContent className="p-6">
               <div className="flex gap-4">
-                <div className="h-10 w-10 shrink-0 bg-primary text-white rounded-lg flex items-center justify-center font-bold">!</div>
+                <div className="h-10 w-10 shrink-0 bg-primary text-primary-foreground flex items-center justify-center font-display italic text-xl">!</div>
                 <div>
-                  <h4 className="font-bold mb-1">{t('dashboard.home.tips.tip1Title')}</h4>
-                  <p className="text-sm text-muted-foreground">{t('dashboard.home.tips.tip1Desc')}</p>
+                  <h4 className="font-bold mb-1 text-sm">{t('dashboard.home.tips.tip1Title')}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{t('dashboard.home.tips.tip1Desc')}</p>
                 </div>
               </div>
             </CardContent>
