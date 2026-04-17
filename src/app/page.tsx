@@ -217,7 +217,7 @@ export default function Home() {
                       {product.imageUrl ? (
                         <Image 
                           src={product.imageUrl}
-                          alt={product.nome}
+                          alt={product.nome ?? "Produto"}
                           fill
                           className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
@@ -233,7 +233,7 @@ export default function Home() {
                     </div>
                     <Link href={`/barraca/${product.boothId}`} className="group">
                       <h3 className="font-display text-2xl mb-1 group-hover:text-primary transition-colors">
-                        {product.nome.toUpperCase()}
+                        {(product.nome ?? "").toUpperCase()}
                       </h3>
                       <p className="font-mono-tag text-[9px] uppercase tracking-widest text-muted-foreground mb-4">
                         {product.boothNome || "Ateliê Independente"}
@@ -289,7 +289,7 @@ export default function Home() {
                     {booth.capaUrl ? (
                       <Image 
                         src={booth.capaUrl} 
-                        alt={booth.nome} 
+                        alt={booth.nome ?? "Barraca"} 
                         fill 
                         className="object-cover grayscale group-hover:scale-105 group-hover:grayscale-0 transition-all duration-700"
                         sizes="(max-width: 768px) 100vw, 25vw"
@@ -305,10 +305,10 @@ export default function Home() {
                       <div className="flex items-center gap-3 mb-3">
                         <div className="h-10 w-10 rounded-full border-2 border-white overflow-hidden bg-white shrink-0">
                           {booth.logoUrl ? (
-                            <Image src={booth.logoUrl} alt={booth.nome} width={40} height={40} className="object-cover" />
+                            <Image src={booth.logoUrl} alt={booth.nome ?? "Logo"} width={40} height={40} className="object-cover" />
                           ) : (
                             <div className="h-full w-full bg-primary flex items-center justify-center text-white text-[10px]">
-                              {booth.nome.charAt(0)}
+                              {(booth.nome ?? "B").charAt(0)}
                             </div>
                           )}
                         </div>
