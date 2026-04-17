@@ -1,4 +1,4 @@
-export const CATEGORIES = [
+export const CATEGORIAS_PLATAFORMA = [
   'Alimentação',
   'Acessórios',
   'Bijouterias e Joias',
@@ -21,10 +21,13 @@ export const CATEGORIES = [
   'Outros'
 ];
 
-export const BRAZILIAN_STATES = [
+export const ESTADOS_BR = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
   'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
+
+export const CATEGORIES = CATEGORIAS_PLATAFORMA;
+export const BRAZILIAN_STATES = ESTADOS_BR;
 
 export const APP_NAME = "Feira Digital";
