@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRef, useState, useEffect } from "react";
@@ -61,7 +60,7 @@ export default function Home() {
     if (heroRef.current) setIsReady(true);
     const timer = setTimeout(() => setIsLoaded(true), 1200);
 
-    // Listener para Produtos (Filtragem client-side para compatibilidade)
+    // Listener para Produtos (Sincronização em tempo real)
     const prodQuery = query(
       collection(db, "products"),
       orderBy("createdAt", "desc"),
@@ -70,8 +69,17 @@ export default function Home() {
 
     const unsubscribeProducts = onSnapshot(prodQuery, (snapshot) => {
       const fetchedProds = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as Product))
-        .filter(p => p.isActive !== false) // Mostra se for true ou undefined
+        .map(doc => {
+          const data = doc.data();
+          return { 
+            id: doc.id, 
+            ...data,
+            nome: data.nome ?? data.name ?? "Sem nome",
+            preco: data.preco ?? data.price ?? 0,
+            categoria: data.categoria ?? data.category ?? ""
+          } as Product;
+        })
+        .filter(p => p.isActive !== false)
         .slice(0, 6);
       
       setProducts(fetchedProds);
@@ -81,7 +89,7 @@ export default function Home() {
       setLoadingData(false);
     });
 
-    // Listener para Barracas (Filtragem client-side para compatibilidade)
+    // Listener para Barracas (Sincronização em tempo real)
     const boothQuery = query(
       collection(db, "booths"),
       orderBy("updatedAt", "desc"),
@@ -90,8 +98,18 @@ export default function Home() {
 
     const unsubscribeBooths = onSnapshot(boothQuery, (snapshot) => {
       const fetchedBooths = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as Booth))
-        .filter(b => b.isActive !== false) // Mostra se for true ou undefined
+        .map(doc => {
+          const data = doc.data();
+          return { 
+            id: doc.id, 
+            ...data,
+            nome: data.nome ?? data.name ?? "Sem nome",
+            categoria: data.categoria ?? data.category ?? "",
+            localizacao: data.localizacao ?? data.city ?? "",
+            estado: data.estado ?? data.state ?? ""
+          } as Booth;
+        })
+        .filter(b => b.isActive !== false)
         .slice(0, 4);
       
       setBooths(fetchedBooths);
@@ -142,7 +160,7 @@ export default function Home() {
               <WovenText 
                 as="h1"
                 text={t('hero.editorial')}
-                className="text-6xl md:text-9xl leading-[0.85] italic text-foreground max-w-4xl"
+                className="text-6xl md:text-9xl leading-[0.85] italic text-foreground max-w-4xl break-keep hyphens-none"
               />
               <motion.p 
                 initial={{ opacity: 0 }}
@@ -192,7 +210,7 @@ export default function Home() {
             <div className="mb-24 flex flex-col items-center text-center">
               <WovenText 
                 text={t('sections.legacyTitle')}
-                className="text-4xl md:text-7xl italic max-w-3xl mb-8"
+                className="text-4xl md:text-7xl italic max-w-3xl mb-8 break-keep hyphens-none"
               />
               <p className="text-muted-foreground max-w-xl text-lg leading-relaxed">
                 {t('sections.legacyDesc')}
@@ -226,15 +244,15 @@ export default function Home() {
                           </Badge>
                         </div>
                       </div>
-                      <h3 className="font-display text-2xl mb-1 group-hover:text-primary transition-colors">
-                        {(product.nome ?? "").toUpperCase()}
+                      <h3 className="font-display text-2xl mb-1 group-hover:text-primary transition-colors uppercase break-keep hyphens-none">
+                        {product.nome}
                       </h3>
                       <p className="font-mono-tag text-[9px] uppercase tracking-widest text-muted-foreground mb-4">
                         {product.boothNome || "Ateliê Independente"}
                       </p>
                     </Link>
                     <div className="flex justify-end">
-                      <PriceTag price={product.preco ?? 0} origin={product.categoria ?? ""} />
+                      <PriceTag price={product.preco} origin={product.categoria} />
                     </div>
                   </KraftCard>
                 ))}
@@ -261,7 +279,7 @@ export default function Home() {
                 <span className="font-mono-tag text-[10px] uppercase tracking-[0.3em] text-secondary block mb-4">Artesãos de Alma</span>
                 <WovenText 
                   text="Mestres & Oficinas"
-                  className="text-4xl md:text-6xl italic"
+                  className="text-4xl md:text-6xl italic break-keep hyphens-none"
                 />
               </div>
               <Link href="/explore" className="font-mono-tag text-xs uppercase tracking-widest link-underline">
@@ -307,18 +325,18 @@ export default function Home() {
                           )}
                         </div>
                         <div>
-                          <h4 className="font-display text-white text-xl leading-none">{booth.nome ?? "Sem nome"}</h4>
-                          <span className="font-mono-tag text-[8px] text-white/60 uppercase tracking-widest">{booth.categoria ?? ""}</span>
+                          <h4 className="font-display text-white text-xl leading-none break-keep hyphens-none">{booth.nome}</h4>
+                          <span className="font-mono-tag text-[8px] text-white/60 uppercase tracking-widest">{booth.categoria}</span>
                         </div>
                       </div>
                       
                       <div className="flex justify-between items-center text-[9px] text-white/80 font-mono-tag uppercase">
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-2 w-2" /> {booth.localizacao ?? ""}, {booth.estado ?? ""}
+                          <MapPin className="h-2 w-2" /> {booth.localizacao}, {booth.estado}
                         </div>
-                        {booth.avgRating && booth.avgRating > 0 && (
+                        {(booth.avgRating ?? 0) > 0 && (
                           <div className="flex items-center gap-1 text-gold">
-                            <Star className="h-2 w-2 fill-current" /> {booth.avgRating.toFixed(1)}
+                            <Star className="h-2 w-2 fill-current" /> {(booth.avgRating ?? 0).toFixed(1)}
                           </div>
                         )}
                       </div>
@@ -345,7 +363,7 @@ export default function Home() {
             <div className="container mx-auto px-4 text-center">
               <WovenText 
                 text={t('sections.authenticity')}
-                className="text-white text-4xl md:text-8xl italic font-light tracking-tighter"
+                className="text-white text-4xl md:text-8xl italic font-light tracking-tighter max-w-5xl mx-auto break-keep hyphens-none"
               />
               <motion.div 
                 initial={{ opacity: 0 }}
@@ -372,7 +390,7 @@ export default function Home() {
               <span className="font-mono-tag text-[10px] uppercase tracking-[0.3em] text-secondary block mb-6">{t('sections.path')}</span>
               <WovenText 
                 text={t('sections.pathTitle')}
-                className="text-4xl md:text-7xl mb-8 italic"
+                className="text-4xl md:text-7xl mb-8 italic max-w-2xl break-keep hyphens-none"
               />
               <p className="text-muted-foreground text-xl leading-relaxed max-w-xl">
                 {t('sections.pathDesc')}

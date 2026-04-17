@@ -58,7 +58,11 @@
 
   h1, h2, h3, h4, .font-display {
     font-family: 'Cormorant Garamond', serif;
-    @apply font-normal tracking-tight;
+    @apply font-normal tracking-tight break-keep hyphens-none;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    hyphens: none;
+    white-space: normal;
   }
 
   .font-mono-tag {
