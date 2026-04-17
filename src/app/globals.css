@@ -4,45 +4,53 @@
 
 @layer base {
   :root {
-    --background: 34 20% 96%; /* #F7F5F2 - Cream */
-    --foreground: 20 20% 10%;
+    /* Paleta Inspirada em Feira: Terracota, Palha e Índigo */
+    --background: 35 30% 96%; /* #F8F5F0 - Linen/Cream */
+    --foreground: 25 40% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 20 20% 10%;
+    --card-foreground: 25 40% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 20 20% 10%;
-    --primary: 21 60% 40%; /* #A35529 - Terracotta/Burnt Orange */
+    --popover-foreground: 25 40% 10%;
+    
+    /* Primary: Terracota (Argila/Cerâmica) */
+    --primary: 15 65% 45%; 
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 100% 78%; /* #FF8E8E - Salmon-pink */
-    --secondary-foreground: 21 60% 10%;
-    --muted: 34 10% 90%;
-    --muted-foreground: 21 20% 40%;
-    --accent: 0 100% 94%;
-    --accent-foreground: 21 60% 40%;
+    
+    /* Secondary: Palha/Ocre (Cestaria) */
+    --secondary: 35 60% 75%; 
+    --secondary-foreground: 25 40% 20%;
+    
+    /* Accent: Índigo (Tingimento Manual) */
+    --accent: 210 30% 92%;
+    --accent-foreground: 210 50% 35%;
+    
+    --muted: 35 15% 90%;
+    --muted-foreground: 25 20% 45%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 34 10% 85%;
-    --input: 34 10% 85%;
-    --ring: 21 60% 40%;
-    --radius: 0.75rem;
+    --border: 35 20% 85%;
+    --input: 35 20% 85%;
+    --ring: 15 65% 45%;
+    --radius: 1rem;
   }
   .dark {
-    --background: 20 20% 10%;
-    --foreground: 34 20% 96%;
-    --card: 20 20% 12%;
-    --card-foreground: 34 20% 96%;
-    --popover: 20 20% 12%;
-    --popover-foreground: 34 20% 96%;
-    --primary: 21 60% 45%;
+    --background: 25 30% 10%;
+    --foreground: 35 30% 96%;
+    --card: 25 30% 12%;
+    --card-foreground: 35 30% 96%;
+    --popover: 25 30% 12%;
+    --popover-foreground: 35 30% 96%;
+    --primary: 15 65% 50%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 100% 65%;
-    --secondary-foreground: 21 60% 10%;
-    --muted: 20 20% 18%;
-    --muted-foreground: 34 10% 70%;
-    --accent: 21 60% 25%;
-    --accent-foreground: 34 20% 96%;
-    --border: 20 20% 20%;
-    --input: 20 20% 20%;
-    --ring: 21 60% 45%;
+    --secondary: 35 40% 30%;
+    --secondary-foreground: 35 30% 90%;
+    --muted: 25 20% 18%;
+    --muted-foreground: 35 10% 70%;
+    --accent: 210 40% 20%;
+    --accent-foreground: 35 30% 96%;
+    --border: 25 20% 20%;
+    --input: 25 20% 20%;
+    --ring: 15 65% 50%;
   }
 }
 
@@ -52,7 +60,7 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
-    transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 200ms ease, color 200ms ease;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
@@ -60,5 +68,13 @@
 }
 
 .transition-smooth {
-  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
