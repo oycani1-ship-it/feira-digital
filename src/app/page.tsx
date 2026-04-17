@@ -13,7 +13,7 @@ import { TornDivider } from "@/components/ui/torn-divider";
 import { PriceTag } from "@/components/ui/price-tag";
 import { LoomLoader } from "@/components/ui/loom-loader";
 import { useTranslation } from "@/context/language-context";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { db } from "@/lib/firebase";
 import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { Store, ShoppingBag, ImageIcon, Star, MapPin } from "lucide-react";
@@ -70,7 +70,6 @@ export default function Home() {
       try {
         setLoadingData(true);
         
-        // Fetch 6 Recent Products
         const prodQuery = query(
           collection(db, "products"),
           where("isActive", "==", true),
@@ -84,7 +83,6 @@ export default function Home() {
         })) as Product[];
         setProducts(fetchedProds);
 
-        // Fetch 4 Recent Booths
         const boothQuery = query(
           collection(db, "booths"),
           where("isActive", "==", true),
@@ -192,7 +190,7 @@ export default function Home() {
 
         <TornDivider />
 
-        {/* PRODUCTS SECTION */}
+        {/* PRODUCTS SECTION (OBRAS) */}
         <section className="py-32 px-4 lg:px-12">
           <div className="container mx-auto">
             <div className="mb-24 flex flex-col items-center text-center">
@@ -213,25 +211,25 @@ export default function Home() {
               <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
                 {products.map((product, i) => (
                   <KraftCard key={product.id} className={i % 2 === 0 ? "rotate-1" : "-rotate-1"}>
-                    <div className="aspect-[3/4] relative mb-6 overflow-hidden bg-muted flex items-center justify-center">
-                      {product.imageUrl ? (
-                        <Image 
-                          src={product.imageUrl}
-                          alt={product.nome ?? "Produto"}
-                          fill
-                          className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
-                        />
-                      ) : (
-                        <ImageIcon className="h-12 w-12 text-muted-foreground/20" />
-                      )}
-                      <div className="absolute top-4 left-4">
-                        <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm text-[10px] font-mono-tag uppercase tracking-widest border-none">
-                          {product.categoria}
-                        </Badge>
+                    <Link href={`/barraca/${product.boothId}`} className="block group">
+                      <div className="aspect-[3/4] relative mb-6 overflow-hidden bg-muted flex items-center justify-center">
+                        {product.imageUrl ? (
+                          <Image 
+                            src={product.imageUrl}
+                            alt={product.nome ?? "Produto"}
+                            fill
+                            className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
+                          />
+                        ) : (
+                          <ImageIcon className="h-12 w-12 text-muted-foreground/20" />
+                        )}
+                        <div className="absolute top-4 left-4">
+                          <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm text-[10px] font-mono-tag uppercase tracking-widest border-none">
+                            {(product.categoria ?? "").toUpperCase()}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    <Link href={`/barraca/${product.boothId}`} className="group">
                       <h3 className="font-display text-2xl mb-1 group-hover:text-primary transition-colors">
                         {(product.nome ?? "").toUpperCase()}
                       </h3>
