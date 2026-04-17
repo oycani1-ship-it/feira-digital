@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Package, Edit2, Trash2, Search, Loader2 } from "lucide-react";
+import { Plus, Package, Edit2, Trash2, Search, Loader2, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -16,11 +16,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { auth, db } from "@/lib/firebase";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { collection, query, where, getDocs, deleteDoc, doc, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, orderBy, updateDoc, getDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
+import { CATEGORIES } from "@/lib/constants";
 
 interface Product {
   id: string;
@@ -29,6 +48,8 @@ interface Product {
   category: string;
   isActive: boolean;
   imageUrl: string;
+  description?: string;
+  shortDescription?: string;
   createdAt?: any;
 }
 
@@ -38,6 +59,22 @@ export default function ProductsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  
+  // Estados para Edição
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    price: "",
+    category: "",
+    description: "",
+    shortDescription: "",
+    isActive: true,
+  });
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const { toast } = useToast();
   const router = useRouter();
 
@@ -110,7 +147,80 @@ export default function ProductsPage() {
       setProducts(prev => prev.filter(p => p.id !== id));
       toast({ title: "Produto excluído", description: "O item foi removido do seu catálogo." });
     } catch (error) {
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível excluir the produto." });
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível excluir o produto." });
+    }
+  };
+
+  const handleEditClick = async (product: Product) => {
+    setEditingProduct(product);
+    setEditFormData({
+      name: product.name,
+      price: product.price.toString(),
+      category: product.category,
+      description: product.description || "",
+      shortDescription: product.shortDescription || "",
+      isActive: product.isActive,
+    });
+    setImagePreview(product.imageUrl);
+    setNewImageFile(null);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct || !user) return;
+
+    setIsSaving(true);
+    try {
+      let finalImageUrl = editingProduct.imageUrl;
+
+      if (newImageFile) {
+        const timestamp = Date.now();
+        const filename = newImageFile.name.replace(/[^a-zA-Z0-9.]/g, "_");
+        const storagePath = `products/${user.uid}/${timestamp}_${filename}`;
+        const storageRef = ref(storage, storagePath);
+        
+        await uploadBytes(storageRef, newImageFile);
+        finalImageUrl = await getDownloadURL(storageRef);
+      }
+
+      const productRef = doc(db, "products", editingProduct.id);
+      const updateData = {
+        name: editFormData.name.trim(),
+        price: parseFloat(editFormData.price),
+        category: editFormData.category,
+        description: editFormData.description.trim(),
+        shortDescription: editFormData.shortDescription.trim(),
+        isActive: editFormData.isActive,
+        imageUrl: finalImageUrl,
+        updatedAt: new Date(),
+      };
+
+      await updateDoc(productRef, updateData);
+
+      setProducts(prev => prev.map(p => 
+        p.id === editingProduct.id ? { ...p, ...updateData } : p
+      ));
+
+      toast({ title: "Sucesso!", description: "Produto atualizado com sucesso." });
+      setIsEditDialogOpen(false);
+    } catch (error: any) {
+      console.error("Erro ao atualizar produto:", error);
+      toast({ variant: "destructive", title: "Erro ao salvar", description: "Não foi possível atualizar o produto." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const onImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -196,16 +306,18 @@ export default function ProductsPage() {
                     <TableCell>{product.category}</TableCell>
                     <TableCell>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}</TableCell>
                     <TableCell>
-                      <Badge variant={product.isActive ? "default" : "secondary"} className={product.isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}>
+                      <Badge variant={product.isActive ? "default" : "secondary"} className={product.isActive ? "bg-green-100 text-green-700 hover:bg-green-100 border-none" : ""}>
                         {product.isActive ? "Ativo" : "Inativo"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/dashboard/produtos/${product.id}/editar`}>
-                            <Edit2 className="h-4 w-4" />
-                          </Link>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEditClick(product)}
+                        >
+                          <Edit2 className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -236,6 +348,140 @@ export default function ProductsPage() {
           </Table>
         )}
       </div>
+
+      {/* Janela de Edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Editar Produto</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleUpdate} className="space-y-6 py-4">
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-bold">Foto do Produto</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative h-32 w-32 rounded-2xl overflow-hidden border-2 border-muted">
+                    {imagePreview ? (
+                      <Image 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        fill 
+                        sizes="128px"
+                        className="object-cover" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <Package className="h-8 w-8 text-muted-foreground/30" />
+                      </div>
+                    )}
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => document.getElementById('edit-image')?.click()}
+                  >
+                    <ImagePlus className="mr-2 h-4 w-4" /> Alterar Foto
+                  </Button>
+                  <input 
+                    id="edit-image" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={onImageChange} 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nome do Produto</Label>
+                <Input 
+                  id="edit-name" 
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                  required 
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <Select 
+                    value={editFormData.category} 
+                    onValueChange={(val) => setEditFormData(prev => ({ ...prev, category: val }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-price">Preço (R$)</Label>
+                  <Input 
+                    id="edit-price" 
+                    type="number" 
+                    step="0.01" 
+                    value={editFormData.price}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, price: e.target.value }))}
+                    required 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-short">Resumo para Listagem</Label>
+                <Textarea 
+                  id="edit-short" 
+                  value={editFormData.shortDescription}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
+                  placeholder="Breve frase para atrair clientes..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Descrição Detalhada</Label>
+                <Textarea 
+                  id="edit-description" 
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Conte os detalhes do seu artesanato..."
+                  className="min-h-[120px]"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Produto Ativo</Label>
+                  <p className="text-xs text-muted-foreground">Visível para os clientes na sua barraca.</p>
+                </div>
+                <Switch 
+                  checked={editFormData.isActive}
+                  onCheckedChange={(val) => setEditFormData(prev => ({ ...prev, isActive: val }))}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)}
+                disabled={isSaving}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
