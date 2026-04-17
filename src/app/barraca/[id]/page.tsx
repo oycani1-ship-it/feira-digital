@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -18,7 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { db, auth } from "@/lib/firebase";
-import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 interface Product {
@@ -47,6 +48,8 @@ interface Booth {
   tags?: string[];
   coverImageUrl?: string;
   logoUrl?: string;
+  views?: number;
+  whatsappClicks?: number;
 }
 
 export default function BoothDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -66,6 +69,11 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         
         if (boothSnap.exists()) {
           setBooth({ id: boothSnap.id, ...boothSnap.data() } as Booth);
+          
+          // Incrementa visualização da barraca
+          await updateDoc(boothRef, {
+            views: increment(1)
+          });
         }
 
         const productsQuery = query(
@@ -98,8 +106,19 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
     fetchData();
   }, [id]);
 
-  const handleWhatsApp = (productName?: string) => {
+  const handleWhatsApp = async (productName?: string) => {
     if (!booth) return;
+    
+    try {
+      // Incrementa cliques no WhatsApp para métricas
+      const boothRef = doc(db, "booths", id);
+      await updateDoc(boothRef, {
+        whatsappClicks: increment(1)
+      });
+    } catch (e) {
+      console.error("Erro ao registrar clique:", e);
+    }
+
     const message = productName 
       ? `Olá! Vi sua barraca ${booth.name} na Feira Digital e tenho interesse no produto: ${productName}`
       : `Olá! Vi sua barraca ${booth.name} na Feira Digital e gostaria de mais informações.`;
