@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/context/language-context";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,19 +64,19 @@ export default function LoginPage() {
       
       <Card className="w-full max-w-md shadow-xl border-none">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Entrar</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('auth.loginTitle')}</CardTitle>
           <CardDescription>
-            Entre para gerenciar sua barraca ou avaliar artesãos.
+            {t('auth.loginSubtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{t('auth.emailLabel')}</Label>
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="nome@exemplo.com" 
+                placeholder={t('auth.emailPlaceholder')} 
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -83,12 +85,12 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">{t('auth.passwordLabel')}</Label>
                 <Link 
                   href="/forgot-password" 
                   className="text-xs text-primary hover:underline"
                 >
-                  Esqueceu a senha?
+                  {t('auth.forgotPasswordLink')}
                 </Link>
               </div>
               <Input 
@@ -101,7 +103,7 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Entrar"}
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('auth.loginButton')}
             </Button>
           </form>
           
@@ -110,7 +112,7 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Ou continue com</span>
+              <span className="bg-background px-2 text-muted-foreground">{t('auth.orContinueWith')}</span>
             </div>
           </div>
           
@@ -137,9 +139,9 @@ export default function LoginPage() {
           </Button>
         </CardContent>
         <CardFooter className="flex flex-wrap items-center justify-center gap-1 text-sm text-muted-foreground">
-          Ainda não tem uma conta?{" "}
+          {t('auth.noAccount')}{" "}
           <Link href="/register" className="text-primary font-medium hover:underline">
-            Crie sua barraca
+            {t('auth.createBoothLink')}
           </Link>
         </CardFooter>
       </Card>

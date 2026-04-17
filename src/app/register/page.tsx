@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "@/context/language-context";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -21,11 +22,12 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      return toast({ variant: "destructive", title: "Erro nas senhas", description: "As senhas não coincidem." });
+      return toast({ variant: "destructive", title: "Erro", description: "As senhas não coincidem." });
     }
     
     setIsLoading(true);
@@ -54,18 +56,18 @@ export default function RegisterPage() {
       
       <Card className="w-full max-w-md shadow-xl border-none">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Criar sua Conta</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('auth.registerTitle')}</CardTitle>
           <CardDescription>
-            Comece a mostrar sua arte para o mundo hoje mesmo.
+            {t('auth.registerSubtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
+              <Label htmlFor="name">{t('auth.nameLabel')}</Label>
               <Input 
                 id="name" 
-                placeholder="Seu nome completo" 
+                placeholder={t('auth.namePlaceholder')} 
                 required 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -73,11 +75,11 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{t('auth.emailLabel')}</Label>
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="nome@exemplo.com" 
+                placeholder={t('auth.emailPlaceholder')} 
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -85,7 +87,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">{t('auth.passwordLabel')}</Label>
               <Input 
                 id="password" 
                 type="password" 
@@ -96,7 +98,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Label htmlFor="confirmPassword">{t('auth.confirmPasswordLabel')}</Label>
               <Input 
                 id="confirmPassword" 
                 type="password" 
@@ -110,19 +112,19 @@ export default function RegisterPage() {
             <div className="flex items-center space-x-2 py-2">
               <Checkbox id="terms" required />
               <label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Aceito os termos e condições
+                {t('auth.termsLabel')}
               </label>
             </div>
 
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Criar Minha Barraca"}
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('auth.registerButton')}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-wrap items-center justify-center gap-1 text-sm text-muted-foreground">
-          Já tem uma conta?{" "}
+          {t('auth.hasAccount')}{" "}
           <Link href="/login" className="text-primary font-medium hover:underline">
-            Entre aqui
+            {t('auth.loginLink')}
           </Link>
         </CardFooter>
       </Card>
