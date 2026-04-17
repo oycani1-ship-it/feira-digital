@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -12,8 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORIES, BRAZILIAN_STATES } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Store, Camera, Save, Instagram, MessageSquare } from "lucide-react";
+import { Loader2, Store, Camera, Save, Instagram, MessageSquare, AlertCircle } from "lucide-react";
 import Image from "next/image";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const normalizarParaBusca = (str: string) => {
   return (str || "")
@@ -27,6 +29,7 @@ export default function BoothSettingsPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
@@ -109,42 +112,77 @@ export default function BoothSettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    const user = auth.currentUser;
+    if (!user) return;
 
     setIsSaving(true);
+    setError("");
+
     try {
-      let logoUrl = formData.logoUrl;
-      let coverImageUrl = formData.coverImageUrl;
+      let finalLogoUrl = formData.logoUrl;
+      let finalCoverUrl = formData.coverImageUrl;
 
-      if (files.logo) {
-        const logoRef = ref(storage, `booths/${userId}/logo_${Date.now()}`);
-        await uploadBytes(logoRef, files.logo);
-        logoUrl = await getDownloadURL(logoRef);
+      // Upload logo — SÓ se for um File novo
+      if (files.logo instanceof File) {
+        const logoRef = ref(storage, `booths/${user.uid}/logo_${Date.now()}`);
+        const snap = await uploadBytes(logoRef, files.logo);
+        finalLogoUrl = await getDownloadURL(snap.ref);
       }
 
-      if (files.cover) {
-        const coverRef = ref(storage, `booths/${userId}/cover_${Date.now()}`);
-        await uploadBytes(coverRef, files.cover);
-        coverImageUrl = await getDownloadURL(coverRef);
+      // Upload capa — SÓ se for um File novo
+      if (files.cover instanceof File) {
+        const coverRef = ref(storage, `booths/${user.uid}/cover_${Date.now()}`);
+        const snap = await uploadBytes(coverRef, files.cover);
+        finalCoverUrl = await getDownloadURL(snap.ref);
       }
 
-      // GARANTE sellerId, isActive E nameNormalizado
-      await setDoc(doc(db, "booths", userId), {
-        ...formData,
-        sellerId: userId,
-        sellerEmail: auth.currentUser?.email || "",
+      const boothRef = doc(db, "booths", user.uid);
+      const existing = await getDoc(boothRef);
+
+      const payload: Record<string, any> = {
+        sellerId: user.uid,
+        sellerEmail: user.email || "",
+        name: formData.name.trim(),
+        sellerName: formData.sellerName.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        city: formData.city.trim(),
+        state: formData.state,
+        whatsapp: formData.whatsapp.trim(),
+        instagram: formData.instagram.trim(),
+        website: formData.website.trim(),
+        logoUrl: finalLogoUrl || "",
+        coverImageUrl: finalCoverUrl || "",
         nameNormalizado: normalizarParaBusca(formData.name),
         categoriaNormalizada: normalizarParaBusca(formData.category),
-        logoUrl,
-        coverImageUrl,
-        isActive: true, // CRÍTICO: Garante que a barraca apareça no explore
+        isActive: true,
         updatedAt: serverTimestamp(),
-      }, { merge: true });
+      };
 
-      toast({ title: "Perfil atualizado!", description: "As informações da sua barraca foram salvas." });
-    } catch (error) {
-      console.error(error);
-      toast({ variant: "destructive", title: "Erro ao salvar", description: "Verifique suas permissões e tente novamente." });
+      // Inicializa metadados apenas se for uma barraca nova
+      if (!existing.exists()) {
+        payload.createdAt = serverTimestamp();
+        payload.views = 0;
+        payload.whatsappClicks = 0;
+        payload.averageRating = 0;
+        payload.totalRatings = 0;
+      }
+
+      await setDoc(boothRef, payload, { merge: true });
+
+      toast({ 
+        title: "Barraca salva com sucesso!", 
+        description: "As informações da sua barraca foram atualizadas." 
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar barraca:", err);
+      const msg = err instanceof Error ? err.message : "Erro desconhecido";
+      setError(`Erro ao salvar: ${msg}`);
+      toast({ 
+        variant: "destructive", 
+        title: "Erro ao salvar", 
+        description: "Verifique suas permissões e tente novamente." 
+      });
     } finally {
       setIsSaving(false);
     }
@@ -167,6 +205,13 @@ export default function BoothSettingsPage() {
           <p className="text-muted-foreground">Configure como os clientes verão sua loja virtual.</p>
         </div>
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <form onSubmit={handleSave} className="space-y-8">
         <div className="space-y-4">
