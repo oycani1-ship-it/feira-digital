@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Package, Edit2, Trash2, Search, Loader2, ImagePlus, X } from "lucide-react";
+import { Plus, Package, Edit2, Trash2, Search, Loader2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -36,10 +35,11 @@ import {
 } from "@/components/ui/select";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { collection, query, where, getDocs, deleteDoc, doc, orderBy, updateDoc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, orderBy, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORIES } from "@/lib/constants";
+import { useTranslation } from "@/context/language-context";
 
 interface Product {
   id: string;
@@ -54,13 +54,13 @@ interface Product {
 }
 
 export default function ProductsPage() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   
-  // Estados para Edição
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -241,12 +241,12 @@ export default function ProductsPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-headline text-3xl font-bold">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo da sua barraca.</p>
+          <h1 className="font-headline text-3xl font-bold">{t('dashboard.products.title')}</h1>
+          <p className="text-muted-foreground">{t('dashboard.products.subtitle')}</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90">
           <Link href="/dashboard/produtos/novo">
-            <Plus className="mr-2 h-4 w-4" /> Adicionar Produto
+            <Plus className="mr-2 h-4 w-4" /> {t('dashboard.products.addBtn')}
           </Link>
         </Button>
       </div>
@@ -255,7 +255,7 @@ export default function ProductsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Buscar produtos..." 
+            placeholder={t('dashboard.products.searchPlaceholder')} 
             className="pl-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -273,12 +273,12 @@ export default function ProductsPage() {
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[80px]">Foto</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="w-[80px]">{t('dashboard.products.table.photo')}</TableHead>
+                <TableHead>{t('dashboard.products.table.name')}</TableHead>
+                <TableHead>{t('dashboard.products.table.category')}</TableHead>
+                <TableHead>{t('dashboard.products.table.price')}</TableHead>
+                <TableHead>{t('dashboard.products.table.status')}</TableHead>
+                <TableHead className="text-right">{t('dashboard.products.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -307,7 +307,7 @@ export default function ProductsPage() {
                     <TableCell>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}</TableCell>
                     <TableCell>
                       <Badge variant={product.isActive ? "default" : "secondary"} className={product.isActive ? "bg-green-100 text-green-700 hover:bg-green-100 border-none" : ""}>
-                        {product.isActive ? "Ativo" : "Inativo"}
+                        {product.isActive ? t('dashboard.products.table.active') : t('dashboard.products.table.inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -336,9 +336,9 @@ export default function ProductsPage() {
                   <TableCell colSpan={6} className="h-48 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <Package className="h-10 w-10 mb-2 opacity-20" />
-                      <p>Nenhum produto encontrado.</p>
+                      <p>{t('dashboard.products.empty')}</p>
                       <Button variant="link" asChild className="mt-2">
-                         <Link href="/dashboard/produtos/novo">Cadastrar meu primeiro produto</Link>
+                         <Link href="/dashboard/produtos/novo">{t('dashboard.products.addBtn')}</Link>
                       </Button>
                     </div>
                   </TableCell>
@@ -349,17 +349,16 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {/* Janela de Edição */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Editar Produto</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">{t('dashboard.products.editModal.title')}</DialogTitle>
           </DialogHeader>
           
           <form onSubmit={handleUpdate} className="space-y-6 py-4">
             <div className="grid gap-6">
               <div className="space-y-2">
-                <Label className="text-sm font-bold">Foto do Produto</Label>
+                <Label className="text-sm font-bold">{t('dashboard.products.table.photo')}</Label>
                 <div className="flex items-center gap-4">
                   <div className="relative h-32 w-32 rounded-2xl overflow-hidden border-2 border-muted">
                     {imagePreview ? (
@@ -381,7 +380,7 @@ export default function ProductsPage() {
                     variant="outline" 
                     onClick={() => document.getElementById('edit-image')?.click()}
                   >
-                    <ImagePlus className="mr-2 h-4 w-4" /> Alterar Foto
+                    <ImagePlus className="mr-2 h-4 w-4" /> {t('dashboard.products.editModal.changePhoto')}
                   </Button>
                   <input 
                     id="edit-image" 
@@ -394,7 +393,7 @@ export default function ProductsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-name">Nome do Produto</Label>
+                <Label htmlFor="edit-name">{t('dashboard.products.table.name')}</Label>
                 <Input 
                   id="edit-name" 
                   value={editFormData.name}
@@ -405,7 +404,7 @@ export default function ProductsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Categoria</Label>
+                  <Label>{t('dashboard.products.table.category')}</Label>
                   <Select 
                     value={editFormData.category} 
                     onValueChange={(val) => setEditFormData(prev => ({ ...prev, category: val }))}
@@ -421,7 +420,7 @@ export default function ProductsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-price">Preço (R$)</Label>
+                  <Label htmlFor="edit-price">{t('dashboard.products.table.price')}</Label>
                   <Input 
                     id="edit-price" 
                     type="number" 
@@ -434,30 +433,28 @@ export default function ProductsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-short">Resumo para Listagem</Label>
+                <Label htmlFor="edit-short">{t('dashboard.newProduct.summaryLabel')}</Label>
                 <Textarea 
                   id="edit-short" 
                   value={editFormData.shortDescription}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
-                  placeholder="Breve frase para atrair clientes..."
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-description">Descrição Detalhada</Label>
+                <Label htmlFor="edit-description">{t('dashboard.newProduct.descriptionLabel')}</Label>
                 <Textarea 
                   id="edit-description" 
                   value={editFormData.description}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Conte os detalhes do seu artesanato..."
                   className="min-h-[120px]"
                 />
               </div>
 
               <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Produto Ativo</Label>
-                  <p className="text-xs text-muted-foreground">Visível para os clientes na sua barraca.</p>
+                  <Label className="text-base">{t('dashboard.newProduct.activeLabel')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.newProduct.activeDesc')}</p>
                 </div>
                 <Switch 
                   checked={editFormData.isActive}
@@ -473,10 +470,10 @@ export default function ProductsPage() {
                 onClick={() => setIsEditDialogOpen(false)}
                 disabled={isSaving}
               >
-                Cancelar
+                {t('dashboard.products.editModal.cancelBtn')}
               </Button>
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('dashboard.products.editModal.saveBtn')}
               </Button>
             </DialogFooter>
           </form>

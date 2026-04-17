@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -21,6 +20,7 @@ import {
 import { db, auth } from "@/lib/firebase";
 import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/context/language-context";
 
 interface Product {
   id: string;
@@ -53,6 +53,7 @@ interface Booth {
 }
 
 export default function BoothDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { t } = useTranslation();
   const { id } = use(params);
   const { toast } = useToast();
   const [booth, setBooth] = useState<Booth | null>(null);
@@ -182,10 +183,10 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         setUserRating(value);
       });
 
-      toast({ title: "Obrigado!", description: "Sua avaliação foi registrada com sucesso." });
+      toast({ title: "Obrigado!", description: t('boothDetail.ratingSuccess') });
     } catch (err) {
       console.error(err);
-      toast({ title: "Erro", description: "Não foi possível registrar sua avaliação.", variant: "destructive" });
+      toast({ title: "Erro", description: t('boothDetail.ratingError'), variant: "destructive" });
     } finally {
       setIsRating(false);
     }
@@ -241,7 +242,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="container mx-auto px-4 absolute bottom-8">
              <Link href="/explore" className="inline-flex items-center text-white/80 hover:text-white mb-4 text-sm font-medium transition-colors">
-               <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Explorar
+               <ArrowLeft className="mr-2 h-4 w-4" /> {t('boothDetail.backToExplore')}
              </Link>
           </div>
         </div>
@@ -273,7 +274,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={() => handleWhatsApp()} className="bg-primary hover:bg-primary/90 font-bold px-6 h-12 rounded-full">
-                      <MessageSquare className="mr-2 h-4 w-4" /> Contato WhatsApp
+                      <MessageSquare className="mr-2 h-4 w-4" /> {t('boothDetail.contactWhatsapp')}
                     </Button>
                     <Button variant="outline" size="icon" className="rounded-full h-12 w-12"><Share2 className="h-4 w-4" /></Button>
                   </div>
@@ -286,7 +287,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                   <div className="flex items-center gap-1.5">
                     <Star className="h-4 w-4 text-amber-500 fill-amber-500" /> 
                     <span className="font-bold">{booth.averageRating?.toFixed(1) || "0.0"}</span>
-                    <span className="text-muted-foreground">({booth.totalRatings || 0} avaliações)</span>
+                    <span className="text-muted-foreground">({booth.totalRatings || 0} {t('boothDetail.evaluations')})</span>
                   </div>
                   <Badge variant="secondary" className="bg-primary/10 text-primary border-none rounded-full px-4">{booth.category}</Badge>
                 </div>
@@ -296,7 +297,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                 </p>
 
                 <div className="pt-6 border-t mt-6">
-                  <p className="text-sm font-bold text-muted-foreground mb-3 uppercase tracking-wider">Avalie esta barraca</p>
+                  <p className="text-sm font-bold text-muted-foreground mb-3 uppercase tracking-wider">{t('boothDetail.rateThisBooth')}</p>
                   <div className="flex items-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -308,7 +309,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                         <Star className={`h-8 w-8 ${userRating >= star ? "text-amber-500 fill-amber-500" : "text-muted/50"}`} />
                       </button>
                     ))}
-                    {userRating > 0 && <span className="ml-4 text-sm text-primary font-bold">Você avaliou com {userRating} estrelas</span>}
                   </div>
                 </div>
               </div>
@@ -317,7 +317,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
 
           <section className="mb-20">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="font-headline text-3xl font-bold">Catálogo de Produtos</h2>
+              <h2 className="font-headline text-3xl font-bold">{t('boothDetail.catalogue')}</h2>
               <div className="h-px flex-1 mx-8 bg-muted hidden md:block" />
             </div>
 
@@ -338,7 +338,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-smooth flex items-center justify-center">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button className="opacity-0 group-hover:opacity-100 transition-smooth bg-white text-primary hover:bg-white/90 font-bold rounded-full">Ver Detalhes</Button>
+                            <Button className="opacity-0 group-hover:opacity-100 transition-smooth bg-white text-primary hover:bg-white/90 font-bold rounded-full">{t('boothDetail.viewDetails')}</Button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-2xl rounded-3xl p-0 overflow-hidden">
                             <div className="grid md:grid-cols-2">
@@ -365,9 +365,9 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
                                 </p>
                                 <div className="pt-4 space-y-3">
                                   <Button onClick={() => handleWhatsApp(product.name)} className="w-full bg-primary hover:bg-primary/90 h-14 rounded-full text-lg font-bold">
-                                    Tenho Interesse
+                                    {t('boothDetail.interestBtn')}
                                   </Button>
-                                  <p className="text-xs text-center text-muted-foreground">Negociação direta com o artesão via WhatsApp.</p>
+                                  <p className="text-xs text-center text-muted-foreground">{t('boothDetail.directNegociation')}</p>
                                 </div>
                               </div>
                             </div>
@@ -387,8 +387,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
             ) : (
               <div className="text-center py-24 bg-muted/20 rounded-[2.5rem] border-2 border-dashed">
                 <ShoppingBag className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Sem produtos no momento</h3>
-                <p className="text-muted-foreground">O artesão está preparando novidades.</p>
+                <h3 className="text-xl font-bold mb-2">{t('boothDetail.emptyCatalogue')}</h3>
               </div>
             )}
           </section>

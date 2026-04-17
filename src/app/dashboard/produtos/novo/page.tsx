@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -26,8 +25,10 @@ import { auth, db, storage } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
+import { useTranslation } from "@/context/language-context";
 
 export default function NewProductPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -164,13 +165,13 @@ export default function NewProductPage() {
             <ChevronLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <h1 className="font-headline text-3xl font-bold">Novo Produto</h1>
+        <h1 className="font-headline text-3xl font-bold">{t('dashboard.newProduct.title')}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid gap-8">
           <div className="space-y-4">
-            <Label className="text-lg font-bold">Fotos do Produto (Máx 4)</Label>
+            <Label className="text-lg font-bold">{t('dashboard.newProduct.photosLabel')}</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {images.map((img, index) => (
                 <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-muted group">
@@ -197,7 +198,7 @@ export default function NewProductPage() {
                   className="aspect-square rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors text-muted-foreground"
                 >
                   <ImagePlus className="h-8 w-8" />
-                  <span className="text-xs font-medium">Adicionar Foto</span>
+                  <span className="text-xs font-medium">{t('dashboard.newProduct.addPhoto')}</span>
                 </button>
               )}
             </div>
@@ -212,7 +213,7 @@ export default function NewProductPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Nome do Produto</Label>
+            <Label htmlFor="name">{t('dashboard.newProduct.nameLabel')}</Label>
             <Input 
               id="name" 
               placeholder="Ex: Vaso de Cerâmica Azul Marinho" 
@@ -225,7 +226,7 @@ export default function NewProductPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>Categoria</Label>
+              <Label>{t('dashboard.newProduct.categoryLabel')}</Label>
               <Select 
                 value={formData.category} 
                 onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
@@ -242,7 +243,7 @@ export default function NewProductPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Preço (R$)</Label>
+              <Label htmlFor="price">{t('dashboard.newProduct.priceLabel')}</Label>
               <Input 
                 id="price" 
                 type="number" 
@@ -258,7 +259,7 @@ export default function NewProductPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="short">Resumo para Listagem (Máx 160 chars)</Label>
+              <Label htmlFor="short">{t('dashboard.newProduct.summaryLabel')}</Label>
               <Button 
                 type="button" 
                 variant="ghost" 
@@ -267,7 +268,7 @@ export default function NewProductPage() {
                 onClick={handleAiTags}
                 disabled={isGenerating || isSaving}
               >
-                <Sparkles className="h-3 w-3 mr-2" /> Sugerir Tags & Categoria
+                <Sparkles className="h-3 w-3 mr-2" /> {t('dashboard.newProduct.suggestAiBtn')}
               </Button>
             </div>
             <Textarea 
@@ -289,7 +290,7 @@ export default function NewProductPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="description">Descrição Detalhada</Label>
+              <Label htmlFor="description">{t('dashboard.newProduct.descriptionLabel')}</Label>
               <Button 
                 type="button" 
                 variant="ghost" 
@@ -299,7 +300,7 @@ export default function NewProductPage() {
                 disabled={isGenerating || isSaving}
               >
                 {isGenerating ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <Wand2 className="h-3 w-3 mr-2" />}
-                Escrever com IA
+                {isGenerating ? t('dashboard.newProduct.aiGenerating') : t('dashboard.newProduct.aiBtn')}
               </Button>
             </div>
             <Textarea 
@@ -315,8 +316,8 @@ export default function NewProductPage() {
 
           <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
             <div className="space-y-0.5">
-              <Label className="text-base">Produto Ativo</Label>
-              <p className="text-sm text-muted-foreground">Visível para os clientes na sua barraca.</p>
+              <Label className="text-base">{t('dashboard.newProduct.activeLabel')}</Label>
+              <p className="text-sm text-muted-foreground">{t('dashboard.newProduct.activeDesc')}</p>
             </div>
             <Switch 
               checked={formData.isActive}
@@ -328,10 +329,10 @@ export default function NewProductPage() {
 
         <div className="flex gap-4 pt-4">
           <Button type="submit" size="lg" className="flex-1 bg-primary hover:bg-primary/90" disabled={isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Salvar Produto"}
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('dashboard.newProduct.saveBtn')}
           </Button>
           <Button type="button" variant="outline" size="lg" onClick={() => router.back()} disabled={isSaving}>
-            Cancelar
+            {t('dashboard.newProduct.cancelBtn')}
           </Button>
         </div>
       </form>

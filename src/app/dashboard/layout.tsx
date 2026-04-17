@@ -10,25 +10,26 @@ import {
   Store, 
   Package, 
   Settings, 
-  LogOut,
   ChevronRight,
   Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-
-const sidebarLinks = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Geral" },
-  { href: "/dashboard/barraca", icon: Store, label: "Minha Barraca" },
-  { href: "/dashboard/produtos", icon: Package, label: "Produtos" },
-  { href: "/dashboard/conta", icon: Settings, label: "Minha Conta" },
-];
+import { useTranslation } from "@/context/language-context";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
+
+  const sidebarLinks = [
+    { href: "/dashboard", icon: LayoutDashboard, label: t('dashboard.sidebar.general') },
+    { href: "/dashboard/barraca", icon: Store, label: t('dashboard.sidebar.myBooth') },
+    { href: "/dashboard/produtos", icon: Package, label: t('dashboard.sidebar.products') },
+    { href: "/dashboard/conta", icon: Settings, label: t('dashboard.sidebar.account') },
+  ];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {

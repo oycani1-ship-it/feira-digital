@@ -16,10 +16,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Camera, ImagePlus } from "lucide-react";
 import { CATEGORIAS_PLATAFORMA, ESTADOS_BR } from "@/lib/constants";
+import { useTranslation } from "@/context/language-context";
 
 export default function MinhaBarracaPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [user,       setUser]       = useState<User | null>(null);
   const [authReady,  setAuthReady]  = useState(false);
@@ -27,7 +29,6 @@ export default function MinhaBarracaPage() {
   const [isLoading,  setIsLoading]  = useState(false);
   const [error,      setError]      = useState("");
 
-  // Campos do formulário
   const [nome,       setNome]       = useState("");
   const [bio,        setBio]        = useState("");
   const [categoria,  setCategoria]  = useState("");
@@ -36,19 +37,15 @@ export default function MinhaBarracaPage() {
   const [whatsapp,   setWhatsapp]   = useState("");
   const [instagram,  setInstagram]  = useState("");
 
-  // URLs já salvas no banco
   const [logoUrl,    setLogoUrl]    = useState("");
   const [capaUrl,    setCapaUrl]    = useState("");
 
-  // Arquivos novos selecionados pelo usuário
   const [logoFile,   setLogoFile]   = useState<File | null>(null);
   const [capaFile,   setCapaFile]   = useState<File | null>(null);
 
-  // Previews locais (objectURL ou URL do banco)
   const [logoPreview, setLogoPreview] = useState("");
   const [capaPreview, setCapaPreview] = useState("");
 
-  // ── Auth ────────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) { router.push("/login"); return; }
@@ -58,7 +55,6 @@ export default function MinhaBarracaPage() {
     return () => unsub();
   }, [router]);
 
-  // ── Carrega dados existentes ────────────────────────────────────
   useEffect(() => {
     if (!authReady || !user) return;
     (async () => {
@@ -86,7 +82,6 @@ export default function MinhaBarracaPage() {
     })();
   }, [authReady, user]);
 
-  // ── Seleção de imagens ─────────────────────────────────────────
   function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -101,7 +96,6 @@ export default function MinhaBarracaPage() {
     setCapaPreview(URL.createObjectURL(f));
   }
 
-  // ── Submit ─────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
@@ -110,7 +104,6 @@ export default function MinhaBarracaPage() {
     setError("");
 
     try {
-      // Upload logo (só se novo arquivo)
       let finalLogoUrl = logoUrl;
       if (logoFile instanceof File) {
         const r    = ref(storage, `booths/${user.uid}/logo_${Date.now()}`);
@@ -120,7 +113,6 @@ export default function MinhaBarracaPage() {
         setLogoFile(null);
       }
 
-      // Upload capa (só se novo arquivo)
       let finalCapaUrl = capaUrl;
       if (capaFile instanceof File) {
         const r    = ref(storage, `booths/${user.uid}/capa_${Date.now()}`);
@@ -153,7 +145,6 @@ export default function MinhaBarracaPage() {
           .normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
       };
 
-      // Campos apenas na criação
       if (!existing.exists()) {
         payload.createdAt      = serverTimestamp();
         payload.views          = 0;
@@ -165,8 +156,8 @@ export default function MinhaBarracaPage() {
       await setDoc(boothRef, payload, { merge: true });
 
       toast({
-        title: "Barraca salva! 🎉",
-        description: "Seu perfil público foi atualizado.",
+        title: t('dashboard.boothSettings.title') + " 🎉",
+        description: t('dashboard.boothSettings.saveBtn'),
       });
 
     } catch (err: unknown) {
@@ -176,12 +167,10 @@ export default function MinhaBarracaPage() {
       toast({ title: "Erro ao salvar", description: msg, variant: "destructive" });
 
     } finally {
-      // ✅ SEMPRE libera o botão — com sucesso OU com erro
       setIsLoading(false);
     }
   }
 
-  // ── Loading ─────────────────────────────────────────────────────
   if (!authReady || isFetching) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -190,14 +179,13 @@ export default function MinhaBarracaPage() {
     );
   }
 
-  // ── Render ──────────────────────────────────────────────────────
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold">Minha Barraca</h1>
+      <h1 className="text-2xl font-bold">{t('dashboard.boothSettings.title')}</h1>
 
       {/* Capa */}
       <div>
-        <Label>Foto de Capa</Label>
+        <Label>{t('dashboard.boothSettings.coverLabel')}</Label>
         <div
           onClick={() => document.getElementById("input-capa")?.click()}
           className="mt-2 relative h-40 rounded-xl border-2 border-dashed border-border bg-muted hover:bg-muted/70 cursor-pointer overflow-hidden flex items-center justify-center transition-colors"
@@ -206,12 +194,12 @@ export default function MinhaBarracaPage() {
             ? <img src={capaPreview} alt="Capa" className="w-full h-full object-cover" />
             : <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <ImagePlus className="h-8 w-8" />
-                <span className="text-sm">Clique para enviar foto de capa</span>
+                <span className="text-sm">{t('dashboard.boothSettings.coverDesc')}</span>
               </div>
           }
           {capaPreview && (
             <div className="absolute inset-0 bg-black/30 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="text-white text-sm font-medium">Alterar Capa</span>
+              <span className="text-white text-sm font-medium">{t('dashboard.products.editModal.changePhoto')}</span>
             </div>
           )}
         </div>
@@ -220,7 +208,7 @@ export default function MinhaBarracaPage() {
 
       {/* Logo */}
       <div>
-        <Label>Logo da Barraca</Label>
+        <Label>{t('dashboard.boothSettings.logoLabel')}</Label>
         <div
           onClick={() => document.getElementById("input-logo")?.click()}
           className="mt-2 w-24 h-24 rounded-full border-2 border-dashed border-border bg-muted hover:bg-muted/70 cursor-pointer overflow-hidden flex items-center justify-center transition-colors"
@@ -235,13 +223,13 @@ export default function MinhaBarracaPage() {
 
       {/* Nome */}
       <div className="space-y-1">
-        <Label htmlFor="nome">Nome da Barraca *</Label>
+        <Label htmlFor="nome">{t('dashboard.boothSettings.nameLabel')}</Label>
         <Input id="nome" value={nome} onChange={e => setNome(e.target.value)} required placeholder="Ex: Artesanato da Maria" />
       </div>
 
       {/* Categoria */}
       <div className="space-y-1">
-        <Label>Categoria Principal</Label>
+        <Label>{t('dashboard.boothSettings.categoryLabel')}</Label>
         <Select value={categoria} onValueChange={setCategoria}>
           <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
           <SelectContent>
@@ -252,18 +240,18 @@ export default function MinhaBarracaPage() {
 
       {/* Bio */}
       <div className="space-y-1">
-        <Label htmlFor="bio">História / Bio da Barraca</Label>
+        <Label htmlFor="bio">{t('dashboard.boothSettings.bioLabel')}</Label>
         <Textarea id="bio" value={bio} onChange={e => setBio(e.target.value)} rows={4} placeholder="Conte a história da sua barraca..." />
       </div>
 
       {/* Localização */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Label htmlFor="localizacao">Cidade/Localização</Label>
+          <Label htmlFor="localizacao">{t('dashboard.boothSettings.cityLabel')}</Label>
           <Input id="localizacao" value={localizacao} onChange={e => setLocalizacao(e.target.value)} placeholder="Ex: São Paulo" />
         </div>
         <div className="space-y-1">
-          <Label>Estado</Label>
+          <Label>{t('dashboard.boothSettings.stateLabel')}</Label>
           <Select value={estado} onValueChange={setEstado}>
             <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
             <SelectContent>
@@ -276,11 +264,11 @@ export default function MinhaBarracaPage() {
       {/* Contatos */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
+          <Label htmlFor="whatsapp">{t('dashboard.boothSettings.whatsappLabel')}</Label>
           <Input id="whatsapp" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="11999999999" />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="instagram">Instagram</Label>
+          <Label htmlFor="instagram">{t('dashboard.boothSettings.instagramLabel')}</Label>
           <Input id="instagram" value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="minha_loja" />
         </div>
       </div>
@@ -295,8 +283,8 @@ export default function MinhaBarracaPage() {
       {/* Botão */}
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading
-          ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</>
-          : "Salvar Perfil da Barraca"
+          ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('dashboard.boothSettings.saving')}</>
+          : t('dashboard.boothSettings.saveBtn')
         }
       </Button>
     </form>

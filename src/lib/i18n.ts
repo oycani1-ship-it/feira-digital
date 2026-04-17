@@ -51,6 +51,127 @@ export const translations = {
       viewBooth: 'Ver Barraca',
       evaluations: 'avaliações'
     },
+    boothDetail: {
+      backToExplore: 'Voltar para Explorar',
+      contactWhatsapp: 'Contato WhatsApp',
+      share: 'Compartilhar',
+      averageRating: 'Média de Avaliações',
+      evaluations: 'avaliações',
+      rateThisBooth: 'Avalie esta barraca',
+      ratingSuccess: 'Sua avaliação foi registrada com sucesso.',
+      ratingError: 'Não foi possível registrar sua avaliação.',
+      catalogue: 'Catálogo de Produtos',
+      viewDetails: 'Ver Detalhes',
+      interestBtn: 'Tenho Interesse',
+      directNegociation: 'Negociação direta com o artesão via WhatsApp.',
+      emptyCatalogue: 'Sem produtos no momento. O artesão está preparando novidades.'
+    },
+    dashboard: {
+      sidebar: {
+        general: 'Geral',
+        myBooth: 'Minha Barraca',
+        products: 'Produtos',
+        account: 'Minha Conta'
+      },
+      home: {
+        welcome: 'Olá',
+        subtitle: 'Aqui está o desempenho real da sua barraca na Feira Digital.',
+        stats: {
+          views: 'Visitas',
+          viewsDesc: 'Total de visualizações do perfil',
+          products: 'Produtos',
+          productsDesc: 'Cadastrados no catálogo',
+          rating: 'Avaliação Média',
+          ratingDesc: 'Baseado em {count} avaliações',
+          clicks: 'Cliques WhatsApp',
+          clicksDesc: 'Interessados que abriram conversa'
+        },
+        quickActions: {
+          title: 'Ações Rápidas',
+          newProduct: 'Novo Produto',
+          editBooth: 'Editar Barraca',
+          viewPublic: 'Ver Perfil Público'
+        },
+        tips: {
+          title: 'Dicas para seu Negócio',
+          tip1Title: 'Destaque seus produtos',
+          tip1Desc: 'Barracas com mais de 5 produtos e fotos de alta qualidade recebem 3x mais contatos no WhatsApp.'
+        }
+      },
+      products: {
+        title: 'Produtos',
+        subtitle: 'Gerencie o catálogo da sua barraca.',
+        addBtn: 'Adicionar Produto',
+        searchPlaceholder: 'Buscar produtos...',
+        table: {
+          photo: 'Foto',
+          name: 'Nome',
+          category: 'Categoria',
+          price: 'Preço',
+          status: 'Status',
+          actions: 'Ações',
+          active: 'Ativo',
+          inactive: 'Inativo'
+        },
+        empty: 'Nenhum produto encontrado.',
+        editModal: {
+          title: 'Editar Produto',
+          changePhoto: 'Alterar Foto',
+          saveBtn: 'Salvar Alterações',
+          cancelBtn: 'Cancelar'
+        }
+      },
+      newProduct: {
+        title: 'Novo Produto',
+        backLink: 'Voltar',
+        photosLabel: 'Fotos do Produto (Máx 4)',
+        addPhoto: 'Adicionar Foto',
+        nameLabel: 'Nome do Produto',
+        categoryLabel: 'Categoria',
+        priceLabel: 'Preço (R$)',
+        summaryLabel: 'Resumo para Listagem (Máx 160 chars)',
+        suggestAiBtn: 'Sugerir Tags & Categoria',
+        tagsLabel: 'Tags Sugeridas',
+        descriptionLabel: 'Descrição Detalhada',
+        aiBtn: 'Escrever com IA',
+        aiGenerating: 'Gerando...',
+        activeLabel: 'Produto Ativo',
+        activeDesc: 'Visível para os clientes na sua barraca.',
+        saveBtn: 'Salvar Produto',
+        cancelBtn: 'Cancelar'
+      },
+      boothSettings: {
+        title: 'Minha Barraca',
+        coverLabel: 'Foto de Capa',
+        coverDesc: 'Clique para enviar foto de capa',
+        logoLabel: 'Logo da Barraca',
+        nameLabel: 'Nome da Barraca *',
+        bioLabel: 'História / Bio da Barraca',
+        categoryLabel: 'Categoria Principal',
+        cityLabel: 'Cidade/Localização',
+        stateLabel: 'Estado',
+        whatsappLabel: 'WhatsApp (com DDD)',
+        instagramLabel: 'Instagram',
+        saveBtn: 'Salvar Perfil da Barraca',
+        saving: 'Salvando...'
+      },
+      account: {
+        title: 'Minha Conta',
+        subtitle: 'Gerencie suas informações de acesso e segurança.',
+        personalInfo: 'Informações Pessoais',
+        personalDesc: 'Atualize seu nome que aparece nas avaliações e perfil.',
+        emailLabel: 'E-mail',
+        emailDesc: 'O e-mail não pode ser alterado por aqui.',
+        nameLabel: 'Nome Completo',
+        saveBtn: 'Salvar Alterações',
+        security: 'Segurança',
+        securityDesc: 'Mantenha sua conta protegida alterando sua senha periodicamente.',
+        newPassLabel: 'Nova Senha',
+        confPassLabel: 'Confirmar Nova Senha',
+        resetBtn: 'Redefinir Senha',
+        shieldText: 'Sua conta está protegida pelo sistema de autenticação seguro da Feira Digital.'
+      }
+    },
     footer: {
       desc: 'Conectando o talento artesanal brasileiro ao mundo digital. Valorize o feito à mão, fortaleça a economia local.',
       platform: 'Plataforma',
@@ -139,6 +260,127 @@ export const translations = {
       viewBooth: 'View Booth',
       evaluations: 'reviews'
     },
+    boothDetail: {
+      backToExplore: 'Back to Explore',
+      contactWhatsapp: 'WhatsApp Contact',
+      share: 'Share',
+      averageRating: 'Average Rating',
+      evaluations: 'reviews',
+      rateThisBooth: 'Rate this booth',
+      ratingSuccess: 'Your rating was registered successfully.',
+      ratingError: 'Could not register your rating.',
+      catalogue: 'Product Catalogue',
+      viewDetails: 'View Details',
+      interestBtn: 'I am Interested',
+      directNegociation: 'Direct negotiation with the artisan via WhatsApp.',
+      emptyCatalogue: 'No products at the moment. The artisan is preparing novelties.'
+    },
+    dashboard: {
+      sidebar: {
+        general: 'General',
+        myBooth: 'My Booth',
+        products: 'Products',
+        account: 'My Account'
+      },
+      home: {
+        welcome: 'Hello',
+        subtitle: 'Here is the real performance of your booth on the Digital Fair.',
+        stats: {
+          views: 'Visits',
+          viewsDesc: 'Total profile views',
+          products: 'Products',
+          productsDesc: 'Registered in the catalogue',
+          rating: 'Average Rating',
+          ratingDesc: 'Based on {count} reviews',
+          clicks: 'WhatsApp Clicks',
+          clicksDesc: 'Interested people who started a chat'
+        },
+        quickActions: {
+          title: 'Quick Actions',
+          newProduct: 'New Product',
+          editBooth: 'Edit Booth',
+          viewPublic: 'View Public Profile'
+        },
+        tips: {
+          title: 'Tips for your Business',
+          tip1Title: 'Highlight your products',
+          tip1Desc: 'Booths with more than 5 products and high-quality photos receive 3x more WhatsApp contacts.'
+        }
+      },
+      products: {
+        title: 'Products',
+        subtitle: 'Manage your booth catalogue.',
+        addBtn: 'Add Product',
+        searchPlaceholder: 'Search products...',
+        table: {
+          photo: 'Photo',
+          name: 'Name',
+          category: 'Category',
+          price: 'Price',
+          status: 'Status',
+          actions: 'Actions',
+          active: 'Active',
+          inactive: 'Inactive'
+        },
+        empty: 'No products found.',
+        editModal: {
+          title: 'Edit Product',
+          changePhoto: 'Change Photo',
+          saveBtn: 'Save Changes',
+          cancelBtn: 'Cancel'
+        }
+      },
+      newProduct: {
+        title: 'New Product',
+        backLink: 'Back',
+        photosLabel: 'Product Photos (Max 4)',
+        addPhoto: 'Add Photo',
+        nameLabel: 'Product Name',
+        categoryLabel: 'Category',
+        priceLabel: 'Price (USD)',
+        summaryLabel: 'Listing Summary (Max 160 chars)',
+        suggestAiBtn: 'Suggest Tags & Category',
+        tagsLabel: 'Suggested Tags',
+        descriptionLabel: 'Detailed Description',
+        aiBtn: 'Write with AI',
+        aiGenerating: 'Generating...',
+        activeLabel: 'Active Product',
+        activeDesc: 'Visible to customers in your booth.',
+        saveBtn: 'Save Product',
+        cancelBtn: 'Cancel'
+      },
+      boothSettings: {
+        title: 'My Booth',
+        coverLabel: 'Cover Photo',
+        coverDesc: 'Click to upload cover photo',
+        logoLabel: 'Booth Logo',
+        nameLabel: 'Booth Name *',
+        bioLabel: 'Story / Booth Bio',
+        categoryLabel: 'Main Category',
+        cityLabel: 'City/Location',
+        stateLabel: 'State',
+        whatsappLabel: 'WhatsApp (with Country Code)',
+        instagramLabel: 'Instagram',
+        saveBtn: 'Save Booth Profile',
+        saving: 'Saving...'
+      },
+      account: {
+        title: 'My Account',
+        subtitle: 'Manage your access and security information.',
+        personalInfo: 'Personal Information',
+        personalDesc: 'Update your name that appears on reviews and profile.',
+        emailLabel: 'Email',
+        emailDesc: 'Email cannot be changed here.',
+        nameLabel: 'Full Name',
+        saveBtn: 'Save Changes',
+        security: 'Security',
+        securityDesc: 'Keep your account protected by changing your password periodically.',
+        newPassLabel: 'New Password',
+        confPassLabel: 'Confirm New Password',
+        resetBtn: 'Reset Password',
+        shieldText: 'Your account is protected by Digital Fair safe authentication system.'
+      }
+    },
     footer: {
       desc: 'Connecting Brazilian artisanal talent to the digital world. Value the handmade, strengthen the local economy.',
       platform: 'Platform',
@@ -223,9 +465,130 @@ export const translations = {
       allStates: 'Brasil entero',
       allCategories: 'Todas las categorías',
       noResults: 'No se encontraron puestos',
-      noResultsDesc: 'Prueba a ajustar tus filtros o términos de búsqueda para encontrar artesanos.',
+      noResultsDesc: 'Prueba a ajustar tus filtros ou términos de búsqueda para encontrar artesanos.',
       viewBooth: 'Ver Puesto',
       evaluations: 'evaluaciones'
+    },
+    boothDetail: {
+      backToExplore: 'Volver a Explorar',
+      contactWhatsapp: 'Contacto WhatsApp',
+      share: 'Compartir',
+      averageRating: 'Promedio de Calificaciones',
+      evaluations: 'evaluaciones',
+      rateThisBooth: 'Califica este puesto',
+      ratingSuccess: 'Su calificación fue registrada con éxito.',
+      ratingError: 'No se pudo registrar su calificación.',
+      catalogue: 'Catálogo de Productos',
+      viewDetails: 'Ver Detalles',
+      interestBtn: 'Tengo Interés',
+      directNegociation: 'Negociación directa con el artesano vía WhatsApp.',
+      emptyCatalogue: 'Sin productos por ahora. El artesano está preparando novedades.'
+    },
+    dashboard: {
+      sidebar: {
+        general: 'General',
+        myBooth: 'Mi Puesto',
+        products: 'Productos',
+        account: 'Mi Cuenta'
+      },
+      home: {
+        welcome: 'Hola',
+        subtitle: 'Aquí está el rendimiento real de su puesto en la Feria Digital.',
+        stats: {
+          views: 'Visitas',
+          viewsDesc: 'Total de vistas del perfil',
+          products: 'Productos',
+          productsDesc: 'Registrados en el catálogo',
+          rating: 'Calificación Promedio',
+          ratingDesc: 'Basado en {count} evaluaciones',
+          clicks: 'Clics WhatsApp',
+          clicksDesc: 'Interesados que iniciaron chat'
+        },
+        quickActions: {
+          title: 'Acciones Rápidas',
+          newProduct: 'Nuevo Producto',
+          editBooth: 'Editar Puesto',
+          viewPublic: 'Ver Perfil Público'
+        },
+        tips: {
+          title: 'Consejos para su Negocio',
+          tip1Title: 'Destaque sus productos',
+          tip1Desc: 'Los puestos con más de 5 productos y fotos de alta calidad reciben 3x más contactos de WhatsApp.'
+        }
+      },
+      products: {
+        title: 'Productos',
+        subtitle: 'Gestione el catálogo de su puesto.',
+        addBtn: 'Añadir Producto',
+        searchPlaceholder: 'Buscar productos...',
+        table: {
+          photo: 'Foto',
+          name: 'Nombre',
+          category: 'Categoría',
+          price: 'Precio',
+          status: 'Estado',
+          actions: 'Acciones',
+          active: 'Activo',
+          inactive: 'Inactivo'
+        },
+        empty: 'No se encontraron productos.',
+        editModal: {
+          title: 'Editar Producto',
+          changePhoto: 'Cambiar Foto',
+          saveBtn: 'Guardar Cambios',
+          cancelBtn: 'Cancelar'
+        }
+      },
+      newProduct: {
+        title: 'Nuevo Producto',
+        backLink: 'Volver',
+        photosLabel: 'Fotos del Producto (Máx 4)',
+        addPhoto: 'Añadir Foto',
+        nameLabel: 'Nombre del Producto',
+        categoryLabel: 'Categoría',
+        priceLabel: 'Precio (EUR)',
+        summaryLabel: 'Resumen para Listado (Máx 160 chars)',
+        suggestAiBtn: 'Sugerir Tags y Categoría',
+        tagsLabel: 'Tags Sugeridas',
+        descriptionLabel: 'Descripción Detallada',
+        aiBtn: 'Escribir con IA',
+        aiGenerating: 'Generando...',
+        activeLabel: 'Producto Activo',
+        activeDesc: 'Visible para los clientes en su puesto.',
+        saveBtn: 'Guardar Producto',
+        cancelBtn: 'Cancelar'
+      },
+      boothSettings: {
+        title: 'Mi Puesto',
+        coverLabel: 'Foto de Portada',
+        coverDesc: 'Haga clic para subir foto de portada',
+        logoLabel: 'Logo del Puesto',
+        nameLabel: 'Nombre del Puesto *',
+        bioLabel: 'Historia / Bio del Puesto',
+        categoryLabel: 'Categoría Principal',
+        cityLabel: 'Ciudad/Ubicación',
+        stateLabel: 'Estado',
+        whatsappLabel: 'WhatsApp (con código de país)',
+        instagramLabel: 'Instagram',
+        saveBtn: 'Guardar Perfil del Puesto',
+        saving: 'Guardando...'
+      },
+      account: {
+        title: 'Mi Cuenta',
+        subtitle: 'Gestione su información de acceso y seguridad.',
+        personalInfo: 'Información Personal',
+        personalDesc: 'Actualice su nombre que aparece en las evaluaciones y perfil.',
+        emailLabel: 'Correo electrónico',
+        emailDesc: 'El correo no se pode cambiar aquí.',
+        nameLabel: 'Nombre Completo',
+        saveBtn: 'Guardar Cambios',
+        security: 'Seguridad',
+        securityDesc: 'Mantenga su cuenta protegida cambiando su contraseña periódicamente.',
+        newPassLabel: 'Nueva Contraseña',
+        confPassLabel: 'Confirmar Nueva Contraseña',
+        resetBtn: 'Restablecer Contraseña',
+        shieldText: 'Su cuenta está protegida por el sistema de autenticación seguro de la Feria Digital.'
+      }
     },
     footer: {
       desc: 'Conectando el talento artesanal brasileño al mundo digital. Valora lo hecho a mano, fortalece la economía local.',

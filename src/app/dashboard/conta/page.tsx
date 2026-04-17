@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, User as UserIcon, Lock, Mail, ShieldCheck } from "lucide-react";
+import { useTranslation } from "@/context/language-context";
 
 export default function AccountSettingsPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,8 +84,8 @@ export default function AccountSettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div>
-        <h1 className="font-headline text-3xl font-bold mb-2">Minha Conta</h1>
-        <p className="text-muted-foreground">Gerencie suas informações de acesso e segurança.</p>
+        <h1 className="font-headline text-3xl font-bold mb-2">{t('dashboard.account.title')}</h1>
+        <p className="text-muted-foreground">{t('dashboard.account.subtitle')}</p>
       </div>
 
       <div className="grid gap-8">
@@ -92,14 +93,14 @@ export default function AccountSettingsPage() {
         <Card className="border-none shadow-sm bg-muted/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <UserIcon className="h-5 w-5 text-primary" /> Informações Pessoais
+              <UserIcon className="h-5 w-5 text-primary" /> {t('dashboard.account.personalInfo')}
             </CardTitle>
-            <CardDescription>Atualize seu nome que aparece nas avaliações e perfil.</CardDescription>
+            <CardDescription>{t('dashboard.account.personalDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="acc-email">E-mail</Label>
+                <Label htmlFor="acc-email">{t('dashboard.account.emailLabel')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -109,10 +110,10 @@ export default function AccountSettingsPage() {
                     className="pl-10 bg-muted/50"
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground">O e-mail não pode ser alterado por aqui.</p>
+                <p className="text-[10px] text-muted-foreground">{t('dashboard.account.emailDesc')}</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="acc-name">Nome Completo</Label>
+                <Label htmlFor="acc-name">{t('dashboard.account.nameLabel')}</Label>
                 <Input 
                   id="acc-name" 
                   value={name}
@@ -122,7 +123,7 @@ export default function AccountSettingsPage() {
                 />
               </div>
               <Button type="submit" className="w-full sm:w-auto" disabled={isUpdatingProfile}>
-                {isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+                {isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : t('dashboard.account.saveBtn')}
               </Button>
             </form>
           </CardContent>
@@ -132,14 +133,14 @@ export default function AccountSettingsPage() {
         <Card className="border-none shadow-sm bg-muted/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <Lock className="h-5 w-5 text-primary" /> Segurança
+              <Lock className="h-5 w-5 text-primary" /> {t('dashboard.account.security')}
             </CardTitle>
-            <CardDescription>Mantenha sua conta protegida alterando sua senha periodicamente.</CardDescription>
+            <CardDescription>{t('dashboard.account.securityDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-pass">Nova Senha</Label>
+                <Label htmlFor="new-pass">{t('dashboard.account.newPassLabel')}</Label>
                 <Input 
                   id="new-pass" 
                   type="password" 
@@ -149,7 +150,7 @@ export default function AccountSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="conf-pass">Confirmar Nova Senha</Label>
+                <Label htmlFor="conf-pass">{t('dashboard.account.confPassLabel')}</Label>
                 <Input 
                   id="conf-pass" 
                   type="password" 
@@ -159,7 +160,7 @@ export default function AccountSettingsPage() {
                 />
               </div>
               <Button variant="outline" type="submit" className="w-full sm:w-auto" disabled={isUpdatingPassword}>
-                {isUpdatingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : "Redefinir Senha"}
+                {isUpdatingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : t('dashboard.account.resetBtn')}
               </Button>
             </form>
           </CardContent>
@@ -168,7 +169,7 @@ export default function AccountSettingsPage() {
         <div className="flex items-center gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
           <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
           <p className="text-xs text-muted-foreground">
-            Sua conta está protegida pelo sistema de autenticação seguro da Feira Digital.
+            {t('dashboard.account.shieldText')}
           </p>
         </div>
       </div>
