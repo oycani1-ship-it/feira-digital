@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { collection, query, where, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import Image from "next/image";
@@ -37,33 +37,26 @@ export default function ExplorePage() {
   const [categoria, setCategoria] = useState("todas");
   const [estado, setEstado]       = useState("Brasil inteiro");
   const { t } = useTranslation();
-  
-  const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
+    // Listener em tempo real para as barracas na página de exploração
+    const q = query(
+      collection(db, "booths"), 
+      where("isActive", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(100)
+    );
 
-    async function fetchAll() {
-      setLoading(true);
-      try {
-        const q = query(
-          collection(db, "booths"), 
-          where("isActive", "==", true),
-          orderBy("createdAt", "desc"),
-          limit(100)
-        );
-        const snap = await getDocs(q);
-        const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Booth));
-        setAllBooths(data);
-      } catch (err) {
-        console.error("Error fetching booths:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booth));
+      setAllBooths(data);
+      setLoading(false);
+    }, (err) => {
+      console.error("Error listening to booths in explore:", err);
+      setLoading(false);
+    });
 
-    fetchAll();
+    return () => unsubscribe();
   }, []);
 
   const normalizar = (s: string) =>

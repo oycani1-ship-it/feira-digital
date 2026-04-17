@@ -12,7 +12,7 @@ import { LoomLoader } from "@/components/ui/loom-loader";
 import { useTranslation } from "@/context/language-context";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { db } from "@/lib/firebase";
-import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { Store, ShoppingBag, ImageIcon, Star, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -44,10 +44,8 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [booths, setBooths] = useState<Booth[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
   const heroRef = useRef<HTMLElement>(null);
-  const hasFetched = useRef(false);
   
   const { scrollYProgress } = useScroll({
     target: isReady ? (heroRef as any) : undefined,
@@ -60,49 +58,49 @@ export default function Home() {
     if (heroRef.current) setIsReady(true);
     const timer = setTimeout(() => setIsLoaded(true), 1200);
 
-    const fetchData = async () => {
-      if (hasFetched.current) return;
-      hasFetched.current = true;
-      
-      try {
-        setLoadingData(true);
-        
-        const prodQuery = query(
-          collection(db, "products"),
-          where("isActive", "==", true),
-          orderBy("createdAt", "desc"),
-          limit(6)
-        );
-        const prodSnap = await getDocs(prodQuery);
-        const fetchedProds = prodSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Product[];
-        setProducts(fetchedProds);
+    // Listener em tempo real para Produtos
+    const prodQuery = query(
+      collection(db, "products"),
+      where("isActive", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(6)
+    );
 
-        const boothQuery = query(
-          collection(db, "booths"),
-          where("isActive", "==", true),
-          orderBy("createdAt", "desc"),
-          limit(4)
-        );
-        const boothSnap = await getDocs(boothQuery);
-        const fetchedBooths = boothSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Booth[];
-        setBooths(fetchedBooths);
+    const unsubscribeProducts = onSnapshot(prodQuery, (snapshot) => {
+      const fetchedProds = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Product[];
+      setProducts(fetchedProds);
+      setLoadingData(false);
+    }, (err) => {
+      console.error("Error listening to products:", err);
+      setLoadingData(false);
+    });
 
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Erro ao carregar os dados da feira.");
-      } finally {
-        setLoadingData(false);
-      }
+    // Listener em tempo real para Barracas
+    const boothQuery = query(
+      collection(db, "booths"),
+      where("isActive", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(4)
+    );
+
+    const unsubscribeBooths = onSnapshot(boothQuery, (snapshot) => {
+      const fetchedBooths = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Booth[];
+      setBooths(fetchedBooths);
+    }, (err) => {
+      console.error("Error listening to booths:", err);
+    });
+
+    return () => {
+      clearTimeout(timer);
+      unsubscribeProducts();
+      unsubscribeBooths();
     };
-
-    fetchData();
-    return () => clearTimeout(timer);
   }, []);
 
   if (!isLoaded) {
