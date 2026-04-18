@@ -6,7 +6,7 @@ import { use } from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, MessageSquare, Share2, ArrowLeft, Loader2, Store as StoreIcon, ShoppingBag, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -51,12 +51,15 @@ interface Booth {
   logoUrl?: string;
   views?: number;
   whatsappClicks?: number;
+  avgRating?: number;
 }
 
 export default function BoothDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { t } = useTranslation();
   const { id } = use(params);
   const { toast } = useToast();
+  const router = useRouter();
+  
   const [booth, setBooth] = useState<Booth | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,7 +91,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
     updateDoc(boothRef, { views: increment(1) }).catch(console.error);
 
     // 2. Escuta em tempo real para os produtos desta barraca
-    // Buscamos produtos onde boothId OU sellerId sejam iguais ao ID da barraca
     const productsQuery = query(
       collection(db, "products"),
       where("sellerId", "==", id)
@@ -104,10 +106,10 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
             name: data.name ?? data.nome ?? "Sem nome",
             price: data.price ?? data.preco ?? 0,
             description: data.description ?? data.descricao ?? "",
-            isActive: data.isActive !== false // Trata indefinido como true
+            isActive: data.isActive !== false
           } as Product;
         })
-        .filter(p => p.isActive); // Apenas ativos no catálogo público
+        .filter(p => p.isActive);
       
       setProducts(pList);
     });
@@ -146,7 +148,6 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
       ? `Olá! Vi sua barraca ${booth.name ?? ""} na Feira Digital e tenho interesse no produto: ${productName}`
       : `Olá! Vi sua barraca ${booth.name ?? ""} na Feira Digital e gostaria de mais informações.`;
     
-    // Formata o número (remove caracteres não numéricos)
     const cleanNumber = booth.whatsapp.replace(/\D/g, '');
     window.open(`https://wa.me/55${cleanNumber}?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -205,7 +206,7 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         transaction.update(boothRef, {
           totalRatings,
           averageRating: newAvg,
-          avgRating: newAvg // Mantém sincronia com campo usado em outras queries
+          avgRating: newAvg
         });
 
         setUserRating(value);
@@ -237,8 +238,8 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
         <StoreIcon className="h-16 w-16 text-muted-foreground mb-4 opacity-20" />
         <h1 className="text-2xl font-bold mb-2">Barraca não encontrada</h1>
         <p className="text-muted-foreground mb-6">Esta barraca pode ter sido removida.</p>
-        <Button asChild>
-          <Link href="/explore">Voltar para Explorar</Link>
+        <Button onClick={() => router.push('/explore')}>
+          Voltar para Explorar
         </Button>
       </div>
     );
@@ -259,9 +260,12 @@ export default function BoothDetailPage({ params }: { params: Promise<{ id: stri
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="container mx-auto px-4 absolute bottom-8">
-             <Link href="/explore" className="inline-flex items-center text-white/80 hover:text-white mb-4 text-sm font-medium transition-colors">
+             <button 
+               onClick={() => router.back()} 
+               className="inline-flex items-center text-white/80 hover:text-white mb-4 text-sm font-medium transition-colors"
+             >
                <ArrowLeft className="mr-2 h-4 w-4" /> {t('boothDetail.backToExplore')}
-             </Link>
+             </button>
           </div>
         </div>
 

@@ -1,8 +1,9 @@
+
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { collection, query, limit, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,14 +37,45 @@ function ExploreContent() {
   const [search, setSearch]       = useState("");
   const [categoria, setCategoria] = useState("todas");
   const [estado, setEstado]       = useState("Brasil inteiro");
+  
   const { t } = useTranslation();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  // Sincroniza categoria inicial vinda da URL (ex: via diálogo da Home)
+  // Função para atualizar a URL preservando outros parâmetros
+  const updateUrl = useCallback((updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "todas" || value === "Brasil inteiro") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
+
+  // Sincroniza estado inicial e mudanças na URL (ex: botão voltar do navegador)
   useEffect(() => {
     const catParam = searchParams.get("category");
+    const stateParam = searchParams.get("state");
+    const searchParam = searchParams.get("q");
+
     if (catParam && CATEGORIAS_PLATAFORMA.includes(catParam)) {
       setCategoria(catParam);
+    } else {
+      setCategoria("todas");
+    }
+
+    if (stateParam && ESTADOS_BR.includes(stateParam)) {
+      setEstado(stateParam);
+    } else {
+      setEstado("Brasil inteiro");
+    }
+
+    if (searchParam) {
+      setSearch(searchParam);
     }
   }, [searchParams]);
 
@@ -90,7 +122,18 @@ function ExploreContent() {
     setSearch("");
     setCategoria("todas");
     setEstado("Brasil inteiro");
+    router.replace(pathname, { scroll: false });
   }
+
+  const handleCategoriaChange = (val: string) => {
+    setCategoria(val);
+    updateUrl({ category: val });
+  };
+
+  const handleEstadoChange = (val: string) => {
+    setEstado(val);
+    updateUrl({ state: val });
+  };
 
   const temFiltro = search || categoria !== "todas" || estado !== "Brasil inteiro";
 
@@ -112,13 +155,16 @@ function ExploreContent() {
                 className="pl-12 h-14 rounded-none bg-card border-border/40 focus-visible:ring-primary shadow-sm"
                 placeholder={t('explore.searchPlaceholder')}
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => {
+                  setSearch(e.target.value);
+                  // Opcional: atualizar URL na busca também
+                }}
               />
             </div>
             
             <div className="flex flex-wrap gap-3">
               <div className="flex-1 min-w-[140px]">
-                <Select value={estado} onValueChange={setEstado}>
+                <Select value={estado} onValueChange={handleEstadoChange}>
                   <SelectTrigger className="h-14 rounded-none bg-card border-border/40 font-mono-tag text-[10px] uppercase tracking-widest">
                     <SelectValue placeholder={t('explore.state')} />
                   </SelectTrigger>
@@ -130,7 +176,7 @@ function ExploreContent() {
               </div>
               
               <div className="flex-1 min-w-[180px]">
-                <Select value={categoria} onValueChange={setCategoria}>
+                <Select value={categoria} onValueChange={handleCategoriaChange}>
                   <SelectTrigger className="h-14 rounded-none bg-card border-border/40 font-mono-tag text-[10px] uppercase tracking-widest">
                     <SelectValue placeholder={t('explore.category')} />
                   </SelectTrigger>
