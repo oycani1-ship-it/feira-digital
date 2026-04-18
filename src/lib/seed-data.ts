@@ -1,6 +1,6 @@
 /**
  * @fileOverview Script de sementeira (seed) com dados reais de artesanato brasileiro.
- * Inclui 27 barracas (uma para cada estado) e produtos variados.
+ * Inclui 27 barracas (uma para cada estado) e produtos variados com preços e descrições fixas.
  */
 
 const WIKI_POTTERY = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ceramic_pot.jpg/640px-Ceramic_pot.jpg";
