@@ -42,25 +42,70 @@ export const SEED_BOOTHS = [
   { id: "br_to", nome: "Capim Dourado", sellerName: "Vera Jalapão", bio: "As famosas joias do Jalapão feitas com o ouro vegetal do Tocantins.", categoria: "Bijouterias e Joias", localizacao: "Palmas", estado: "TO", whatsapp: "63999990027", logoUrl: WIKI_GOLDEN_GRASS, capaUrl: WIKI_GOLDEN_GRASS, isActive: true, avgRating: 5.0, totalRatings: 42 },
 ];
 
-export const SEED_PRODUCTS = SEED_BOOTHS.flatMap((booth) => [
-  {
-    name: `Clássico de ${booth.localizacao}`,
-    price: Math.floor(Math.random() * (450 - 50 + 1) + 50),
-    description: `Um item exclusivo da barraca ${booth.nome}, feito à mão utilizando técnicas de ${booth.categoria} transmitidas por gerações em ${booth.estado}.`,
-    category: booth.categoria,
-    imageUrl: booth.logoUrl,
-    boothId: booth.id,
-    sellerId: booth.id,
-    isActive: true,
-  },
-  {
-    name: `Especial ${booth.estado}`,
-    price: Math.floor(Math.random() * (300 - 30 + 1) + 30),
-    description: `Peça de design único que captura a essência da cultura de ${booth.localizacao}. Perfeito para decorar ou presentear.`,
-    category: booth.categoria,
-    imageUrl: booth.capaUrl,
-    boothId: booth.id,
-    sellerId: booth.id,
-    isActive: true,
-  }
-]);
+export const SEED_PRODUCTS = [
+  // AC
+  { id: "prod_ac_1", name: "Vaso Kene Tradicional", price: 120.00, description: "Vaso de cerâmica modelado à mão com grafismos Kene da etnia Ashaninka.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_ac", sellerId: "br_ac", isActive: true },
+  { id: "prod_ac_2", name: "Cesto de Arumã", price: 85.00, description: "Cesto trançado com fibra de arumã e pigmentos naturais da floresta.", category: "Decoração", imageUrl: WIKI_BASKET, boothId: "br_ac", sellerId: "br_ac", isActive: true },
+  // AL
+  { id: "prod_al_1", name: "Jogo Americano Filé", price: 250.00, description: "Conjunto completo em renda Filé bordado com cores vibrantes típicas de Alagoas.", category: "Decoração", imageUrl: WIKI_LACE, boothId: "br_al", sellerId: "br_al", isActive: true },
+  { id: "prod_al_2", name: "Caminho de Mesa Renda", price: 145.00, description: "Peça delicada em renda Filé para mesas de jantar.", category: "Decoração", imageUrl: WIKI_LACE, boothId: "br_al", sellerId: "br_al", isActive: true },
+  // AP
+  { id: "prod_ap_1", name: "Escultura Onça de Madeira", price: 180.00, description: "Escultura entalhada à mão em madeira de reaproveitamento.", category: "Decoração", imageUrl: WIKI_WOOD, boothId: "br_ap", sellerId: "br_ap", isActive: true },
+  // AM
+  { id: "prod_am_1", name: "Tipiti Baniwa", price: 95.00, description: "Espremedor de mandioca artesanal feito por comunidades do Alto Rio Negro.", category: "Cama/Mesa/Banho", imageUrl: WIKI_BASKET, boothId: "br_am", sellerId: "br_am", isActive: true },
+  { id: "prod_am_2", name: "Máscara Cerimonial", price: 220.00, description: "Máscara tradicional utilizada em ritos amazônicos.", category: "Decoração", imageUrl: WIKI_WOOD, boothId: "br_am", sellerId: "br_am", isActive: true },
+  // BA
+  { id: "prod_ba_1", name: "Moringa Barro Marrom", price: 90.00, description: "Moringa clássica de Maragogipinho para água fresca.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_ba", sellerId: "br_ba", isActive: true },
+  { id: "prod_ba_2", name: "Prato Decorativo Bahia", price: 110.00, description: "Prato em cerâmica pintado com temas do cotidiano baiano.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_ba", sellerId: "br_ba", isActive: true },
+  // CE
+  { id: "prod_ce_1", name: "Almofada Renda Labirinto", price: 85.00, description: "Capa de almofada com detalhes em renda Labirinto autêntica.", category: "Decoração", imageUrl: WIKI_LACE, boothId: "br_ce", sellerId: "br_ce", isActive: true },
+  { id: "prod_ce_2", name: "Caminho de Mesa Labirinto", price: 320.00, description: "Peça de luxo artesanal feita em Fortaleza.", category: "Decoração", imageUrl: WIKI_LACE, boothId: "br_ce", sellerId: "br_ce", isActive: true },
+  // DF
+  { id: "prod_df_1", name: "Luminária Capital", price: 190.00, description: "Luminária de mesa inspirada nos vitrais da Catedral de Brasília.", category: "Decoração", imageUrl: WIKI_WOOD, boothId: "br_df", sellerId: "br_df", isActive: true },
+  // ES
+  { id: "prod_es_1", name: "Panela de Barro Oficial", price: 130.00, description: "Panela de barro original para moqueca capixaba.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_es", sellerId: "br_es", isActive: true },
+  // GO
+  { id: "prod_go_1", name: "Drusa de Cristal Puro", price: 150.00, description: "Formação natural de cristal de rocha da região de Cristalina.", category: "Decoração", imageUrl: WIKI_JEWELRY, boothId: "br_go", sellerId: "br_go", isActive: true },
+  { id: "prod_go_2", name: "Pulseira Capim Dourado", price: 45.00, description: "Pulseira elegante feita com o capim dourado da região.", category: "Bijouterias e Joias", imageUrl: WIKI_GOLDEN_GRASS, boothId: "br_go", sellerId: "br_go", isActive: true },
+  // MA
+  { id: "prod_ma_1", name: "Bolsa Buriti Chic", price: 140.00, description: "Bolsa feminina tecida à mão com fibra de palmeira Buriti.", category: "Bolsas e Couros", imageUrl: WIKI_BASKET, boothId: "br_ma", sellerId: "br_ma", isActive: true },
+  // MT
+  { id: "prod_mt_1", name: "Rede de Tear Manual", price: 280.00, description: "Rede de algodão tecida em tear tradicional do Pantanal.", category: "Tapetes e Redes", imageUrl: WIKI_LACE, boothId: "br_mt", sellerId: "br_mt", isActive: true },
+  // MS
+  { id: "prod_ms_1", name: "Colar Jarina Real", price: 85.00, description: "Colar feito com o marfim vegetal da Amazônia (Semente de Jarina).", category: "Bijouterias e Joias", imageUrl: WIKI_JEWELRY, boothId: "br_ms", sellerId: "br_ms", isActive: true },
+  // MG
+  { id: "prod_mg_1", name: "Queijo Canastra Meia Cura", price: 110.00, description: "Queijo artesanal premiado da região da Serra da Canastra.", category: "Alimentação", imageUrl: WIKI_CHEESE, boothId: "br_mg", sellerId: "br_mg", isActive: true },
+  { id: "prod_mg_2", name: "Doce de Leite na Palha", price: 35.00, description: "Doce de leite tradicional cozido lentamente no fogão a lenha.", category: "Alimentação", imageUrl: WIKI_CHEESE, boothId: "br_mg", sellerId: "br_mg", isActive: true },
+  // PA
+  { id: "prod_pa_1", name: "Vaso Marajoara Clássico", price: 380.00, description: "Réplica autorizada de cerâmica arqueológica da Ilha de Marajó.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_pa", sellerId: "br_pa", isActive: true },
+  { id: "prod_pa_2", name: "Prato Tapajônico", price: 150.00, description: "Peça cerâmica com os cariátides e relevos típicos da região do Tapajós.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_pa", sellerId: "br_pa", isActive: true },
+  // PB
+  { id: "prod_pb_1", name: "Camisa de Algodão Colorido", price: 165.00, description: "Vestuário feito com algodão sustentável que já nasce com cor.", category: "Roupas", imageUrl: WIKI_LACE, boothId: "br_pb", sellerId: "br_pb", isActive: true },
+  // PR
+  { id: "prod_pr_1", name: "Petisqueira Pinhão", price: 120.00, description: "Utilitário em madeira esculpida no formato de pinhão.", category: "Decoração", imageUrl: WIKI_WOOD, boothId: "br_pr", sellerId: "br_pr", isActive: true },
+  // PE
+  { id: "prod_pe_1", name: "O Retirante de Barro", price: 180.00, description: "Escultura inspirada no legado de Mestre Vitalino de Caruaru.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_pe", sellerId: "br_pe", isActive: true },
+  { id: "prod_pe_2", name: "Banda de Pífano", price: 120.00, description: "Conjunto de figuras de barro representando músicos nordestinos.", category: "Cerâmicas", imageUrl: WIKI_POTTERY, boothId: "br_pe", sellerId: "br_pe", isActive: true },
+  // PI
+  { id: "prod_pi_1", name: "Anel Opala Nobre", price: 450.00, description: "Anel em prata com a única opala preciosa do Brasil.", category: "Bijouterias e Joias", imageUrl: WIKI_JEWELRY, boothId: "br_pi", sellerId: "br_pi", isActive: true },
+  // RJ
+  { id: "prod_rj_1", name: "Biquíni Crochê Rio", price: 160.00, description: "Moda praia feita artesanalmente com design exclusivo do Rio.", category: "Moda Artesanal", imageUrl: WIKI_LACE, boothId: "br_rj", sellerId: "br_rj", isActive: true },
+  // RN
+  { id: "prod_rn_1", name: "Toalha Renascença Luxo", price: 480.00, description: "Toalha de mesa inteiramente feita em renda Renascença.", category: "Decoração", imageUrl: WIKI_LACE, boothId: "br_rn", sellerId: "br_rn", isActive: true },
+  // RS
+  { id: "prod_rs_1", name: "Mateira Couro Cru", price: 220.00, description: "Kit completo em couro para carregar chimarrão com estilo gaúcho.", category: "Bolsas e Couros", imageUrl: WIKI_LEATHER, boothId: "br_rs", sellerId: "br_rs", isActive: true },
+  { id: "prod_rs_2", name: "Faca Artesanal Pampa", price: 350.00, description: "Faca forjada com cabo em osso e bainha de couro.", category: "Bolsas e Couros", imageUrl: WIKI_LEATHER, boothId: "br_rs", sellerId: "br_rs", isActive: true },
+  // RO
+  { id: "prod_ro_1", name: "Colar Etnia Karitiana", price: 55.00, description: "Colar de miçangas e sementes feito por mulheres indígenas.", category: "Bijouterias e Joias", imageUrl: WIKI_JEWELRY, boothId: "br_ro", sellerId: "br_ro", isActive: true },
+  // RR
+  { id: "prod_rr_1", name: "Cesto Macuxi", price: 95.00, description: "Cesto trançado com grafismos de terra da etnia Macuxi.", category: "Tapetes e Redes", imageUrl: WIKI_BASKET, boothId: "br_rr", sellerId: "br_rr", isActive: true },
+  // SC
+  { id: "prod_sc_1", name: "Vaso de Cristal Soprado", price: 380.00, description: "Vaso artesanal feito com técnica alemã de sopro de vidro.", category: "Decoração", imageUrl: WIKI_POTTERY, boothId: "br_sc", sellerId: "br_sc", isActive: true },
+  // SP
+  { id: "prod_sp_1", name: "Abstrato em Madeira", price: 420.00, description: "Escultura decorativa inspirada no movimento de arte de Embu.", category: "Quadros e Molduras", imageUrl: WIKI_WOOD, boothId: "br_sp", sellerId: "br_sp", isActive: true },
+  // SE
+  { id: "prod_se_1", name: "Toalha Irlanda Brasil", price: 450.00, description: "Toalha em Renda Irlandesa, patrimônio imaterial de Sergipe.", category: "Decoração", imageUrl: WIKI_LACE, boothId: "br_se", sellerId: "br_se", isActive: true },
+  // TO
+  { id: "prod_to_1", name: "Mandala Capim Dourado", price: 240.00, description: "Grande mandala decorativa feita com o ouro vegetal do Jalapão.", category: "Bijouterias e Joias", imageUrl: WIKI_GOLDEN_GRASS, boothId: "br_to", sellerId: "br_to", isActive: true },
+  { id: "prod_to_2", name: "Colar Jalapão", price: 110.00, description: "Colar em capim dourado e pedras naturais.", category: "Bijouterias e Joias", imageUrl: WIKI_GOLDEN_GRASS, boothId: "br_to", sellerId: "br_to", isActive: true }
+];
