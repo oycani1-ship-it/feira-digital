@@ -1,58 +1,56 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { db } from '@/lib/firebase';
 import { SEED_BOOTHS, SEED_PRODUCTS } from '@/lib/seed-data';
-import { FieldValue } from 'firebase-admin/firestore';
+import { collection, doc, setDoc, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 export async function POST() {
   try {
-    // 1. Limpeza em lote (Batch Delete)
-    const batch1 = adminDb.batch();
+    // 1. Limpeza - deletar todos os documentos existentes
+    const boothsSnap = await getDocs(collection(db, 'booths'));
+    for (const d of boothsSnap.docs) {
+      await deleteDoc(doc(db, 'booths', d.id));
+    }
 
-    const boothsSnap = await adminDb.collection('booths').get();
-    boothsSnap.docs.forEach(d => batch1.delete(d.ref));
+    const productsSnap = await getDocs(collection(db, 'products'));
+    for (const d of productsSnap.docs) {
+      await deleteDoc(doc(db, 'products', d.id));
+    }
 
-    const productsSnap = await adminDb.collection('products').get();
-    productsSnap.docs.forEach(d => batch1.delete(d.ref));
-
-    const ratingsSnap = await adminDb.collection('ratings').get();
-    ratingsSnap.docs.forEach(d => batch1.delete(d.ref));
-
-    await batch1.commit();
+    const ratingsSnap = await getDocs(collection(db, 'ratings'));
+    for (const d of ratingsSnap.docs) {
+      await deleteDoc(doc(db, 'ratings', d.id));
+    }
 
     // 2. Inserção das Barracas
-    const batch2 = adminDb.batch();
     for (const booth of SEED_BOOTHS) {
-      const ref = adminDb.collection('booths').doc(booth.id);
-      batch2.set(ref, { 
-        ...booth, 
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp()
+      const ref = doc(db, 'booths', booth.id);
+      await setDoc(ref, {
+        ...booth,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
     }
-    await batch2.commit();
 
-    // 3. Inserção dos Produtos (em um novo lote para evitar limites de tamanho)
-    const batch3 = adminDb.batch();
+    // 3. Inserção dos Produtos
     for (const product of SEED_PRODUCTS) {
-      const ref = adminDb.collection('products').doc(); // Gera ID automático
-      batch3.set(ref, { 
-        ...product, 
-        createdAt: FieldValue.serverTimestamp() 
+      const ref = doc(collection(db, 'products'));
+      await setDoc(ref, {
+        ...product,
+        createdAt: serverTimestamp()
       });
     }
-    await batch3.commit();
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Seed finalizado com sucesso!",
-      booths: SEED_BOOTHS.length, 
-      products: SEED_PRODUCTS.length 
+    return NextResponse.json({
+      success: true,
+      message: 'Seed finalizado com sucesso!',
+      booths: SEED_BOOTHS.length,
+      products: SEED_PRODUCTS.length
     });
   } catch (error: any) {
     console.error('Seed error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message || String(error) 
-    }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
