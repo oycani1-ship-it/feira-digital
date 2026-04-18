@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user) return null;
+  if (!user) { router.replace("/login"); return null; }
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">

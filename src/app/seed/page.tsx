@@ -9,6 +9,9 @@ import { Loader2, Database, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function SeedPage() {
+  if (process.env.NODE_ENV !== "development") {
+    return <div style={{display:"none"}} />;
+  }
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 

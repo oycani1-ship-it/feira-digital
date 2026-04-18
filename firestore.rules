@@ -1,26 +1,40 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Regras temporárias permissivas para desenvolvimento e execução do SEED
+
+    // ─── USERS ────────────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
     }
 
+    // ─── BOOTHS ───────────────────────────────────────────────────────────────
     match /booths/{boothId} {
       allow read: if true;
-      allow write: if true; // Permite que o script de seed limpe e popule as barracas
+      allow create: if request.auth != null
+        && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.sellerId == request.auth.uid;
     }
 
+    // ─── PRODUCTS ─────────────────────────────────────────────────────────────
     match /products/{productId} {
       allow read: if true;
-      allow write: if true; // Permite que o script de seed limpe e popule os produtos
+      allow create: if request.auth != null
+        && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.sellerId == request.auth.uid;
     }
 
+    // ─── RATINGS ──────────────────────────────────────────────────────────────
     match /ratings/{ratingId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
     }
+
   }
 }

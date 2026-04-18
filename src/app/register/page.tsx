@@ -26,6 +26,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 8) { setError('A senha deve ter pelo menos 8 caracteres.'); setLoading(false); return; }
     if (password !== confirmPassword) {
       return toast({ variant: "destructive", title: "Erro", description: "As senhas não coincidem." });
     }
