@@ -14,7 +14,7 @@ import { useTranslation } from "@/context/language-context";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { ShoppingBag, ImageIcon, Star, MapPin, Grid } from "lucide-react";
+import { ShoppingBag, ImageIcon, Star, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIAS_PLATAFORMA } from "@/lib/constants";
 import {
@@ -216,15 +216,14 @@ export default function Home() {
               
               <div className="mt-12 flex flex-col sm:flex-row gap-6 items-stretch sm:items-center">
                 <Link href="/explore">
-                  <StampButton className="w-full sm:w-auto px-12 py-6 text-sm min-w-[280px] shadow-2xl shadow-primary/20">
+                  <StampButton className="w-full sm:w-auto px-12 py-6 text-sm min-w-[280px]">
                     {t('hero.cta')}
                   </StampButton>
                 </Link>
                 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <StampButton variant="outline" className="w-full sm:w-auto px-12 py-6 text-sm min-w-[280px] border-2 border-primary/40 hover:border-primary group">
-                      <Grid className="mr-3 h-5 w-5 transition-transform group-hover:rotate-12" /> 
+                    <StampButton variant="outline" className="w-full sm:w-auto px-12 py-6 text-sm min-w-[280px]">
                       {t('hero.categoriesBtn')}
                     </StampButton>
                   </DialogTrigger>
