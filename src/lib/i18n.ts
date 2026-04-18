@@ -3,7 +3,8 @@ export type Language = 'pt-BR' | 'en-US' | 'es-ES';
 export const translations = {
   'pt-BR': {
     nav: {
-      explore: 'Explorar',
+      explore: 'Barracas',
+      products: 'Produtos',
       howItWorks: 'Como Funciona',
       login: 'Entrar',
       createBooth: 'Criar Barraca',
@@ -41,6 +42,13 @@ export const translations = {
       noResultsDesc: 'Tente ajustar seus filtros ou termos de busca para encontrar artesãos.',
       viewBooth: 'Ver Barraca',
       evaluations: 'avaliações'
+    },
+    productsPage: {
+      title: 'Catálogo de Artesanato',
+      subtitle: 'Peças únicas selecionadas de todos os estados brasileiros.',
+      searchPlaceholder: 'Buscar por nome, técnica ou material...',
+      noResults: 'Nenhum produto encontrado',
+      noResultsDesc: 'Tente outros termos de busca ou mude a categoria.'
     },
     boothDetail: {
       backToExplore: 'Voltar para Explorar',
@@ -128,7 +136,7 @@ export const translations = {
         aiGenerating: 'Gerando...',
         activeLabel: 'Produto Ativo',
         activeDesc: 'Visível para os clientes na sua barraca.',
-        saveBtn: 'Salvar Produto',
+        saveBtn: 'Salvando Produto',
         cancelBtn: 'Cancelar'
       },
       boothSettings: {
@@ -203,7 +211,8 @@ export const translations = {
   },
   'en-US': {
     nav: {
-      explore: 'Explore',
+      explore: 'Booths',
+      products: 'Products',
       howItWorks: 'How it Works',
       login: 'Login',
       createBooth: 'Create Booth',
@@ -241,6 +250,13 @@ export const translations = {
       noResultsDesc: 'Try adjusting your filters or search terms to find artisans.',
       viewBooth: 'View Booth',
       evaluations: 'reviews'
+    },
+    productsPage: {
+      title: 'Craft Catalog',
+      subtitle: 'Unique pieces selected from all Brazilian states.',
+      searchPlaceholder: 'Search by name, technique or material...',
+      noResults: 'No products found',
+      noResultsDesc: 'Try other search terms or change the category.'
     },
     boothDetail: {
       backToExplore: 'Back to Explore',
@@ -403,7 +419,8 @@ export const translations = {
   },
   'es-ES': {
     nav: {
-      explore: 'Explorar',
+      explore: 'Puestos',
+      products: 'Productos',
       howItWorks: 'Cómo Funciona',
       login: 'Entrar',
       createBooth: 'Crear Puesto',
@@ -420,7 +437,7 @@ export const translations = {
     sections: {
       legacy: 'Legado y Forma',
       legacyTitle: 'Colecciones curadas que trascienden lo efímero.',
-      legacyDesc: 'Unimos técnicas ancestrales con sensibilidades contemporáneas. Sin producción em masa. Sin concesiones. Solo pura intención humana.',
+      legacyDesc: 'Unimos técnicas ancestrais con sensibilidades contemporáneas. Sin producción em masa. Sin concesiones. Solo pura intención humana.',
       legacyLink: 'Explorar Colecciones',
       authenticity: 'La autenticidad é el lujo supremo.',
       path: 'El Camino del Artesano',
@@ -442,6 +459,13 @@ export const translations = {
       viewBooth: 'Ver Puesto',
       evaluations: 'evaluaciones'
     },
+    productsPage: {
+      title: 'Catálogo de Artesanía',
+      subtitle: 'Piezas únicas seleccionadas de todos los estados brasileños.',
+      searchPlaceholder: 'Buscar por nombre, técnica o material...',
+      noResults: 'No se encontraron productos',
+      noResultsDesc: 'Prueba otros términos de búsqueda o cambia la categoría.'
+    },
     boothDetail: {
       backToExplore: 'Volver a Explorar',
       contactWhatsapp: 'Contacto WhatsApp',
@@ -460,7 +484,7 @@ export const translations = {
     dashboard: {
       sidebar: {
         general: 'General',
-        myPuesto: 'Mi Puesto',
+        myBooth: 'Mi Puesto',
         products: 'Productos',
         account: 'Mi Cuenta'
       },
@@ -548,7 +572,7 @@ export const translations = {
       },
       account: {
         title: 'Mi Cuenta',
-        subtitle: 'Gestione su información de acceso y seguridad.',
+        subtitle: 'Gestione su información de acesso y seguridad.',
         personalInfo: 'Información Personal',
         personalDesc: 'Actualice su nombre que aparece en las evaluaciones y perfil.',
         emailLabel: 'Correo electrónico',

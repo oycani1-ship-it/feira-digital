@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Search, ShoppingBag, Globe, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Search, ShoppingBag, Globe, Menu, X, LogOut, LayoutDashboard, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -23,7 +22,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const router = useRouter();
-  const { t, language, setLanguage } = useTranslation();
+  const { t, setLanguage } = useTranslation();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -48,6 +47,7 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-8">
             <Link href="/explore" className="font-mono-tag text-[10px] uppercase tracking-widest hover:text-primary transition-colors">{t('nav.explore')}</Link>
+            <Link href="/produtos" className="font-mono-tag text-[10px] uppercase tracking-widest hover:text-primary transition-colors">{t('nav.products')}</Link>
             <Link href="/#como-funciona" className="font-mono-tag text-[10px] uppercase tracking-widest hover:text-primary transition-colors">{t('nav.howItWorks')}</Link>
           </div>
         </div>
@@ -113,6 +113,7 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden p-8 bg-background border-b flex flex-col gap-6 animate-in slide-in-from-top-4">
           <Link href="/explore" className="font-mono-tag text-[10px] uppercase tracking-widest" onClick={() => setIsOpen(false)}>{t('nav.explore')}</Link>
+          <Link href="/produtos" className="font-mono-tag text-[10px] uppercase tracking-widest" onClick={() => setIsOpen(false)}>{t('nav.products')}</Link>
           <Link href="/#como-funciona" className="font-mono-tag text-[10px] uppercase tracking-widest" onClick={() => setIsOpen(false)}>{t('nav.howItWorks')}</Link>
           {!user && (
             <Link href="/login" className="font-mono-tag text-[10px] uppercase tracking-widest border-t pt-6" onClick={() => setIsOpen(false)}>{t('nav.login')}</Link>
