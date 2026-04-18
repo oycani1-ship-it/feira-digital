@@ -14,7 +14,7 @@ import { useTranslation } from "@/context/language-context";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { Store, ShoppingBag, ImageIcon, Star, MapPin, Grid } from "lucide-react";
+import { ShoppingBag, ImageIcon, Star, MapPin, Grid } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIAS_PLATAFORMA } from "@/lib/constants";
 import {
@@ -58,7 +58,6 @@ interface SafeArtisanImageProps {
   sizes?: string;
 }
 
-// Componente utilitário para renderizar imagens com fallback
 function SafeArtisanImage({ src, alt, fill, width, height, className, sizes }: SafeArtisanImageProps) {
   const [error, setError] = useState(false);
 
@@ -80,7 +79,7 @@ function SafeArtisanImage({ src, alt, fill, width, height, className, sizes }: S
       className={className} 
       sizes={sizes}
       onError={() => setError(true)}
-      unoptimized={src.startsWith('data:')} // Melhora performance de base64 no Next.js
+      unoptimized={src.startsWith('data:')}
     />
   );
 }
@@ -215,17 +214,18 @@ export default function Home() {
                 {t('hero.description')}
               </motion.p>
               
-              <div className="mt-12 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+              <div className="mt-12 flex flex-col sm:flex-row gap-6 items-stretch sm:items-center">
                 <Link href="/explore">
-                  <StampButton className="px-12 py-6 text-sm min-w-[240px] shadow-2xl shadow-primary/20">
+                  <StampButton className="w-full sm:w-auto px-12 py-6 text-sm min-w-[280px] shadow-2xl shadow-primary/20">
                     {t('hero.cta')}
                   </StampButton>
                 </Link>
                 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <StampButton variant="outline" className="px-12 py-6 text-sm min-w-[240px] border-2 border-primary/40 hover:border-primary">
-                      <Grid className="mr-2 h-4 w-4" /> {t('hero.categoriesBtn')}
+                    <StampButton variant="outline" className="w-full sm:w-auto px-12 py-6 text-sm min-w-[280px] border-2 border-primary/40 hover:border-primary group">
+                      <Grid className="mr-3 h-5 w-5 transition-transform group-hover:rotate-12" /> 
+                      {t('hero.categoriesBtn')}
                     </StampButton>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-2xl bg-card border-border rounded-none shadow-2xl p-8">
@@ -236,7 +236,7 @@ export default function Home() {
                       {CATEGORIAS_PLATAFORMA.map((cat) => (
                         <Link 
                           key={cat} 
-                          href={`/explore?category=${cat}`}
+                          href={`/explore?category=${encodeURIComponent(cat)}`}
                           className="p-4 border border-border/50 hover:bg-primary hover:text-white transition-all duration-300 text-[10px] font-mono-tag uppercase tracking-widest text-center group"
                         >
                           <span className="group-hover:translate-x-1 inline-block transition-transform">{cat}</span>
