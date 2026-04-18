@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface StampButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface StampButtonProps extends HTMLMotionProps<"button"> {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "outline";
 }
@@ -20,7 +20,9 @@ export function StampButton({ children, className, variant = "primary", ...props
     const id = Date.now();
     setRipples((prev) => [...prev, { id, x, y }]);
     
-    if (props.onClick) props.onClick(e);
+    if (props.onClick) {
+      props.onClick(e as any);
+    }
   };
 
   React.useEffect(() => {
@@ -40,7 +42,7 @@ export function StampButton({ children, className, variant = "primary", ...props
 
   return (
     <motion.button
-      {...props}
+      {...(props as any)}
       onClick={handleClick}
       whileTap={{ scale: 0.94 }}
       transition={{ type: "spring", stiffness: 400, damping: 15 }}
