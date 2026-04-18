@@ -166,13 +166,7 @@ export default function ExplorePage() {
                   <KraftCard className={`h-full flex flex-col ${i % 2 === 0 ? 'rotate-1' : '-rotate-1'}`} dataCursor="inspect">
                     <div className="relative h-56 mb-8 overflow-hidden bg-muted group">
                       {booth.capaUrl ? (
-                        <Image
-                          src={booth.capaUrl}
-                          alt={booth.nome ?? "Capa"}
-                          fill
-                          className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
-                          sizes="(max-width: 768px) 100vw, 400px"
-                        />
+                        <img src={booth.capaUrl} alt={booth.nome ?? "Capa"} className="absolute inset-0 w-full h-full object-cover" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center opacity-10">
                           <Store className="h-16 w-16" />
@@ -188,7 +182,7 @@ export default function ExplorePage() {
                     <div className="relative flex-1 flex flex-col">
                       <div className="absolute -top-14 left-0 w-16 h-16 rounded-none border-2 border-background overflow-hidden shadow-lg bg-card">
                         {booth.logoUrl ? (
-                          <Image src={booth.logoUrl} alt="Logo" width={64} height={64} className="object-cover" />
+                          <img src={booth.logoUrl} alt="Logo" width={64} height={64} className="object-cover rounded-full" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-primary text-white text-xl font-display">
                             {booth.nome?.charAt(0) ?? "?"}

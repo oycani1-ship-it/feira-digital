@@ -3,14 +3,14 @@
  * Inclui 27 barracas (uma para cada estado) e produtos variados com preços e descrições fixas.
  */
 
-const WIKI_POTTERY = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ceramic_pot.jpg/640px-Ceramic_pot.jpg";
-const WIKI_LACE = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Lace_making.jpg/640px-Lace_making.jpg";
-const WIKI_WOOD = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/African_wood_carving.jpg/640px-African_wood_carving.jpg";
-const WIKI_GOLDEN_GRASS = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Artesanato_Capim_Dourado.jpg/640px-Artesanato_Capim_Dourado.jpg";
-const WIKI_CHEESE = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Queijo_minas_artesanal_do_Serro.jpg/640px-Queijo_minas_artesanal_do_Serro.jpg";
-const WIKI_JEWELRY = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Jewellery_beads.jpg/640px-Jewellery_beads.jpg";
-const WIKI_LEATHER = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Leather_craft.jpg/640px-Leather_craft.jpg";
-const WIKI_BASKET = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Traditional_basket_from_Rwanda.jpg/640px-Traditional_basket_from_Rwanda.jpg";
+const WIKI_POTTERY = "https://picsum.photos/seed/10/800/400";
+const WIKI_LACE = "https://picsum.photos/seed/11/800/400";
+const WIKI_WOOD = "https://picsum.photos/seed/12/800/400";
+const WIKI_GOLDEN_GRASS = "https://picsum.photos/seed/13/800/400";
+const WIKI_CHEESE = "https://picsum.photos/seed/14/800/400";
+const WIKI_JEWELRY = "https://picsum.photos/seed/15/800/400";
+const WIKI_LEATHER = "https://picsum.photos/seed/16/800/400";
+const WIKI_BASKET = "https://picsum.photos/seed/17/800/400";
 
 export const SEED_BOOTHS = [
   { id: "br_ac", nome: "Cerâmica da Floresta", sellerName: "Maria Ashaninka", bio: "Artesanato indígena do Acre, utilizando pigmentos naturais da floresta amazônica.", categoria: "Cerâmicas", localizacao: "Rio Branco", estado: "AC", whatsapp: "68999990001", logoUrl: WIKI_POTTERY, capaUrl: WIKI_POTTERY, isActive: true, avgRating: 4.8, totalRatings: 15 },

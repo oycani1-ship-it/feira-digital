@@ -14,7 +14,8 @@ export const translations = {
     hero: {
       editorial: 'A ressonância singular do artesanato puro.',
       description: 'Um palco digital curado para a excelência artesanal. Onde cada ponto narra uma linhagem de maestria.',
-      cta: 'Iniciar Descoberta'
+      cta: 'O que você procura?',
+      categoriesBtn: 'Explorar Categorias'
     },
     sections: {
       legacy: 'Legado e Forma',
@@ -213,7 +214,8 @@ export const translations = {
     hero: {
       editorial: 'The singular resonance of raw craftsmanship.',
       description: 'A curated digital stage for artisanal excellence. Where every stitch narrates a lineage of mastery.',
-      cta: 'Begin Discovery'
+      cta: 'What are you looking for?',
+      categoriesBtn: 'Browse Categories'
     },
     sections: {
       legacy: 'Legacy & Form',
@@ -412,14 +414,15 @@ export const translations = {
     hero: {
       editorial: 'La resonancia singular de la artesanía pura.',
       description: 'Un escenario digital curado para la excelencia artesanal. Donde cada puntada narra un linaje de maestría.',
-      cta: 'Iniciar Descubrimiento'
+      cta: '¿Qué estás buscando?',
+      categoriesBtn: 'Explorar Categorías'
     },
     sections: {
       legacy: 'Legado y Forma',
       legacyTitle: 'Colecciones curadas que trascienden lo efímero.',
-      legacyDesc: 'Unimos técnicas ancestrales con sensibilidades contemporáneas. Sin producción en masa. Sin concesiones. Solo pura intención humana.',
+      legacyDesc: 'Unimos técnicas ancestrales con sensibilidades contemporáneas. Sin producción em masa. Sin concesiones. Solo pura intención humana.',
       legacyLink: 'Explorar Colecciones',
-      authenticity: 'La autenticidad es el lujo supremo.',
+      authenticity: 'La autenticidad é el lujo supremo.',
       path: 'El Camino del Artesano',
       pathTitle: 'Diálogo directo con maestros creadores.',
       pathDesc: 'Conéctese directamente vía WhatsApp. Negocie el alma de su adquisición sin intermediarios. Un mercado construido sobre la confianza y la transparencia.',
@@ -457,7 +460,7 @@ export const translations = {
     dashboard: {
       sidebar: {
         general: 'General',
-        myBooth: 'Mi Puesto',
+        myPuesto: 'Mi Puesto',
         products: 'Productos',
         account: 'Mi Cuenta'
       },
@@ -552,8 +555,8 @@ export const translations = {
         emailDesc: 'El correo no se pode cambiar aquí.',
         nameLabel: 'Nombre Completo',
         saveBtn: 'Guardar Cambios',
-        security: 'Seguridad',
-        securityDesc: 'Mantenga su cuenta protegida cambiando su contraseña periódicamente.',
+        security: 'Segurança',
+        securityDesc: 'Mantenha sua conta protegida alterando sua senha periodicamente.',
         newPassLabel: 'Nueva Contraseña',
         confPassLabel: 'Confirmar Nueva Contraseña',
         resetBtn: 'Restablecer Contraseña',
@@ -568,7 +571,7 @@ export const translations = {
       forSellers: 'Para Vendedores',
       rights: 'Todos los derechos reservados.',
       privacy: 'Privacidad',
-      terms: 'Términos de Uso'
+      terms: 'Termos de Uso'
     },
     auth: {
       registerTitle: 'Crear su Cuenta',
@@ -581,7 +584,7 @@ export const translations = {
       confirmPasswordLabel: 'Confirmar Contraseña',
       nameLabel: 'Nombre Completo',
       termsLabel: 'Acepto los términos y condiciones',
-      registerButton: 'Crear Mi Puesto',
+      registerButton: 'Criar Mi Puesto',
       loginButton: 'Entrar',
       forgotPasswordButton: 'Enviar Enlace',
       noAccount: '¿Aún no tienes una cuenta?',
@@ -591,7 +594,7 @@ export const translations = {
       backToLogin: 'Volver al login',
       emailSentTitle: '¡Correo Enviado!',
       emailSentDesc: 'Revise su bandeja de entrada.',
-      backButton: 'Volver',
+      backButton: 'Voltar',
       forgotPasswordLink: '¿Olvidaste la contraseña?',
       orContinueWith: 'O continuar con',
       namePlaceholder: 'Su nombre completo',

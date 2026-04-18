@@ -14,8 +14,16 @@ import { useTranslation } from "@/context/language-context";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { Store, ShoppingBag, ImageIcon, Star, MapPin } from "lucide-react";
+import { Store, ShoppingBag, ImageIcon, Star, MapPin, Grid } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CATEGORIAS_PLATAFORMA } from "@/lib/constants";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Product {
   id: string;
@@ -114,7 +122,7 @@ export default function Home() {
             nome: data.nome ?? data.name ?? "Sem nome",
             preco: data.preco ?? data.price ?? 0,
             categoria: data.categoria ?? data.category ?? "",
-            imageUrl: data.imageUrl ?? data.capaUrl ?? "" // Suporta ambos os campos por segurança
+            imageUrl: data.imageUrl ?? data.capaUrl ?? "" 
           } as Product;
         })
         .filter(p => p.isActive !== false)
@@ -206,12 +214,37 @@ export default function Home() {
               >
                 {t('hero.description')}
               </motion.p>
-              <div className="mt-12">
+              
+              <div className="mt-12 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
                 <Link href="/explore">
-                  <StampButton>
+                  <StampButton className="px-12 py-6 text-sm min-w-[240px] shadow-2xl shadow-primary/20">
                     {t('hero.cta')}
                   </StampButton>
                 </Link>
+                
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <StampButton variant="outline" className="px-12 py-6 text-sm min-w-[240px] border-2 border-primary/40 hover:border-primary">
+                      <Grid className="mr-2 h-4 w-4" /> {t('hero.categoriesBtn')}
+                    </StampButton>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl bg-card border-border rounded-none shadow-2xl p-8">
+                    <DialogHeader>
+                      <DialogTitle className="font-display text-4xl italic mb-8 border-b pb-4">Explore por Categoria</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {CATEGORIAS_PLATAFORMA.map((cat) => (
+                        <Link 
+                          key={cat} 
+                          href={`/explore?category=${cat}`}
+                          className="p-4 border border-border/50 hover:bg-primary hover:text-white transition-all duration-300 text-[10px] font-mono-tag uppercase tracking-widest text-center group"
+                        >
+                          <span className="group-hover:translate-x-1 inline-block transition-transform">{cat}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
             
