@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { KraftCard } from "@/components/ui/kraft-card";
 import { PriceTag } from "@/components/ui/price-tag";
 import { useTranslation } from "@/context/language-context";
+import { SafeArtisanImage } from "@/components/ui/safe-artisan-image";
 import { 
   Select, 
   SelectContent, 
@@ -19,7 +20,6 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIAS_PLATAFORMA } from "@/lib/constants";
 import Link from "next/link";
-import Image from "next/image";
 
 interface Product {
   id: string;
@@ -58,6 +58,9 @@ function ProductsContent() {
         } as Product;
       });
       setProducts(data);
+      setLoading(false);
+    }, (err) => {
+      console.error("Erro ao carregar produtos:", err);
       setLoading(false);
     });
 
@@ -115,7 +118,7 @@ function ProductsContent() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-32 space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-            <p className="font-mono-tag text-[10px] uppercase tracking-widest text-muted-foreground">Tecendo o catálogo...</p>
+            <p className="font-mono-tag text-[10px] uppercase tracking-widest text-muted-foreground animate-pulse">Tecendo o catálogo...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-32 bg-surface/30 border border-dashed flex flex-col items-center">
@@ -129,19 +132,13 @@ function ProductsContent() {
               <Link key={product.id} href={`/barraca/${product.boothId}`}>
                 <KraftCard className={`h-full flex flex-col ${i % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}>
                   <div className="relative aspect-[3/4] mb-6 overflow-hidden bg-muted group">
-                    {product.imageUrl ? (
-                      <Image 
-                        src={product.imageUrl} 
-                        alt={product.nome} 
-                        fill 
-                        className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                        <Package className="h-12 w-12" />
-                      </div>
-                    )}
+                    <SafeArtisanImage 
+                      src={product.imageUrl}
+                      alt={product.nome}
+                      fill
+                      className="object-cover grayscale group-hover:grayscale-0"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                    />
                     <div className="absolute top-4 left-4">
                       <Badge className="bg-card/90 backdrop-blur-sm text-primary border-none font-mono-tag text-[8px] uppercase tracking-widest">
                         {product.categoria.toUpperCase()}
@@ -150,7 +147,7 @@ function ProductsContent() {
                   </div>
                   
                   <div className="flex-1 flex flex-col">
-                    <h2 className="font-display text-2xl mb-1 group-hover:text-primary transition-colors uppercase">
+                    <h2 className="font-display text-2xl mb-1 group-hover:text-primary transition-colors uppercase break-keep">
                       {product.nome}
                     </h2>
                     <p className="font-mono-tag text-[8px] uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-1">

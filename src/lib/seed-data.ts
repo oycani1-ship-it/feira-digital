@@ -3,14 +3,14 @@
  * Inclui 27 barracas (uma para cada estado) e produtos variados com preços e descrições fixas.
  */
 
-const WIKI_POTTERY = "https://picsum.photos/seed/10/800/400";
-const WIKI_LACE = "https://picsum.photos/seed/11/800/400";
-const WIKI_WOOD = "https://picsum.photos/seed/12/800/400";
-const WIKI_GOLDEN_GRASS = "https://picsum.photos/seed/13/800/400";
-const WIKI_CHEESE = "https://picsum.photos/seed/14/800/400";
-const WIKI_JEWELRY = "https://picsum.photos/seed/15/800/400";
-const WIKI_LEATHER = "https://picsum.photos/seed/16/800/400";
-const WIKI_BASKET = "https://picsum.photos/seed/17/800/400";
+const WIKI_POTTERY = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Pottery_-_Memorial_dos_Povos_Ind%C3%ADgenas_-_Brasilia_-_DSC00478.JPG/800px-Pottery_-_Memorial_dos_Povos_Ind%C3%ADgenas_-_Brasilia_-_DSC00478.JPG";
+const WIKI_LACE = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Renda_de_bilro.jpg/800px-Renda_de_bilro.jpg";
+const WIKI_WOOD = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Escultura_em_madeira._%286479004455%29.jpg/800px-Escultura_em_madeira._%286479004455%29.jpg";
+const WIKI_GOLDEN_GRASS = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Artesanato_capim_dourado.jpg/800px-Artesanato_capim_dourado.jpg";
+const WIKI_CHEESE = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Queijo_Minas_Frescal.JPG/800px-Queijo_Minas_Frescal.JPG";
+const WIKI_JEWELRY = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Artez%C3%A3o_na_feira_-_panoramio.jpg/800px-Artez%C3%A3o_na_feira_-_panoramio.jpg";
+const WIKI_LEATHER = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Artesanato_em_couro.jpg/800px-Artesanato_em_couro.jpg";
+const WIKI_BASKET = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Cestaria_ind%C3%ADgena_MN_01.jpg/800px-Cestaria_ind%C3%ADgena_MN_01.jpg";
 
 export const SEED_BOOTHS = [
   { id: "br_ac", nome: "Cerâmica da Floresta", sellerName: "Maria Ashaninka", bio: "Artesanato indígena do Acre, utilizando pigmentos naturais da floresta amazônica.", categoria: "Cerâmicas", localizacao: "Rio Branco", estado: "AC", whatsapp: "68999990001", logoUrl: WIKI_POTTERY, capaUrl: WIKI_POTTERY, isActive: true, avgRating: 4.8, totalRatings: 15 },
