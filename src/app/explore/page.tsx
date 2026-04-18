@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { collection, query, limit, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Store, Search, X, MapPin, Star } from "lucide-react";
+import { Store, Search, X, MapPin, Star, Loader2 } from "lucide-react";
 import { useTranslation } from "@/context/language-context";
 import { CATEGORIAS_PLATAFORMA, ESTADOS_BR } from "@/lib/constants";
 
@@ -30,13 +30,22 @@ interface Booth {
   totalRatings?: number;
 }
 
-export default function ExplorePage() {
+function ExploreContent() {
   const [allBooths, setAllBooths] = useState<Booth[]>([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
   const [categoria, setCategoria] = useState("todas");
   const [estado, setEstado]       = useState("Brasil inteiro");
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
+
+  // Sincroniza categoria inicial vinda da URL (ex: via diálogo da Home)
+  useEffect(() => {
+    const catParam = searchParams.get("category");
+    if (catParam && CATEGORIAS_PLATAFORMA.includes(catParam)) {
+      setCategoria(catParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const q = query(
@@ -46,7 +55,6 @@ export default function ExplorePage() {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booth));
-      // Ordenação client-side para evitar necessidade de índices complexos no Firebase
       const sortedData = data.sort((a, b) => (a.nome ?? "").localeCompare(b.nome ?? ""));
       setAllBooths(sortedData);
       setLoading(false);
@@ -62,7 +70,6 @@ export default function ExplorePage() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   const filtered = allBooths.filter(b => {
-    // Filtro isActive manual no cliente se necessário, ou mantido no banco
     if (b.isActive === false) return false;
 
     const nome = normalizar(b.nome ?? "");
@@ -143,10 +150,9 @@ export default function ExplorePage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="aspect-[4/5] bg-muted animate-pulse border border-border/20" />
-              ))}
+            <div className="flex flex-col items-center justify-center py-32 space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+              <p className="font-mono-tag text-[10px] uppercase tracking-widest text-muted-foreground animate-pulse">Sintonizando frequências artesanais...</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-32 bg-surface/30 rounded-none border border-dashed flex flex-col items-center">
@@ -166,7 +172,7 @@ export default function ExplorePage() {
                   <KraftCard className={`h-full flex flex-col ${i % 2 === 0 ? 'rotate-1' : '-rotate-1'}`} dataCursor="inspect">
                     <div className="relative h-56 mb-8 overflow-hidden bg-muted group">
                       {booth.capaUrl ? (
-                        <img src={booth.capaUrl} alt={booth.nome ?? "Capa"} className="absolute inset-0 w-full h-full object-cover" />
+                        <img src={booth.capaUrl} alt={booth.nome ?? "Capa"} className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center opacity-10">
                           <Store className="h-16 w-16" />
@@ -182,7 +188,7 @@ export default function ExplorePage() {
                     <div className="relative flex-1 flex flex-col">
                       <div className="absolute -top-14 left-0 w-16 h-16 rounded-none border-2 border-background overflow-hidden shadow-lg bg-card">
                         {booth.logoUrl ? (
-                          <img src={booth.logoUrl} alt="Logo" width={64} height={64} className="object-cover rounded-full" />
+                          <img src={booth.logoUrl} alt="Logo" width={64} height={64} className="object-cover h-full w-full" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-primary text-white text-xl font-display">
                             {booth.nome?.charAt(0) ?? "?"}
@@ -190,7 +196,7 @@ export default function ExplorePage() {
                         )}
                       </div>
                       
-                      <h2 className="font-display text-3xl mb-3 mt-4 group-hover:text-primary transition-colors">
+                      <h2 className="font-display text-3xl mb-3 mt-4 group-hover:text-primary transition-colors uppercase break-keep hyphens-none">
                         {booth.nome ?? "Sem nome"}
                       </h2>
                       
@@ -221,5 +227,17 @@ export default function ExplorePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <ExploreContent />
+    </Suspense>
   );
 }
