@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/context/language-context";
 
+
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,10 +24,15 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { t } = useTranslation();
-
+  const [error, setError] = useState<string>('');
+  
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 8) { setError('A senha deve ter pelo menos 8 caracteres.'); setLoading(false); return; }
+    if (password.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres.');
+      setIsLoading(false); // ✅ CORRIGIDO: era setLoading(false)
+      return;
+    }
     if (password !== confirmPassword) {
       return toast({ variant: "destructive", title: "Erro", description: "As senhas não coincidem." });
     }
@@ -48,6 +54,7 @@ export default function RegisterPage() {
     }
   };
 
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted/30">
       <Link href="/" className="flex items-center gap-2 mb-8">
@@ -63,6 +70,9 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <p className="text-sm text-destructive mb-4 text-center">{error}</p>
+          )}
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">{t('auth.nameLabel')}</Label>
